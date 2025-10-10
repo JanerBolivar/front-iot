@@ -59,17 +59,8 @@ export function AuthProvider({ children }) {
     
     setLoading(false);
     
-    // Limpiar sesión al cerrar la ventana/pestaña
-    const handleBeforeUnload = () => {
-      localStorage.removeItem(SESSION_KEY);
-      localStorage.removeItem(SESSION_TIMESTAMP_KEY);
-    };
-    
-    window.addEventListener('beforeunload', handleBeforeUnload);
-    
-    return () => {
-      window.removeEventListener('beforeunload', handleBeforeUnload);
-    };
+    // No limpiar la sesión automáticamente al refrescar
+    // La sesión se mantendrá hasta que expire (24 horas) o se haga logout manual
   }, []);
 
   // API - Con fallback a localStorage para desarrollo
@@ -242,7 +233,7 @@ export function AuthProvider({ children }) {
       resetDemo,
       createDemoAdmin
     }),
-    [user, loading, isAdmin]
+    [user, loading, isAdmin, register, login, logout, updateProfile, changePassword, listUsers, resetDemo, createDemoAdmin]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

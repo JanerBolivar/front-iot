@@ -11,14 +11,18 @@ function loadFromStorage() {
     try {
       const raw = localStorage.getItem(k);
       if (raw) return JSON.parse(raw) || [];
-    } catch {}
+    } catch (error) {
+      console.warn('Error reading from localStorage:', error);
+    }
   }
   return [];
 }
 function saveToStorage(users) {
   try {
     localStorage.setItem("gd_users", JSON.stringify(users));
-  } catch {}
+  } catch (error) {
+    console.warn('Error saving to localStorage:', error);
+  }
 }
 function normUser(u, i = 0) {
   return {
@@ -149,7 +153,7 @@ export default function UsersPage() {
       return 0;
     });
     return arr;
-  }, [state.users, state.query, state.sortKey, state.sortDir]);
+  }, [state]);
 
   const total = filtered.length;
   const totalPages = Math.max(1, Math.ceil(total / state.pageSize));
@@ -183,7 +187,7 @@ export default function UsersPage() {
   return (
     <div className="max-w-6xl mx-auto">
       <div className="mb-6 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-        <h1 className="text-xl font-bold">Usuarios</h1>
+        <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100">Usuarios</h1>
         <div className="flex items-center gap-2">
           {state.selected.size > 0 && (
             <button
@@ -204,28 +208,28 @@ export default function UsersPage() {
 
       {/* métricas */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
-        <div className="rounded-xl border bg-white p-4">
-          <p className="text-xs text-gray-500">Total</p>
-          <p className="mt-1 text-2xl font-semibold">{metrics.total}</p>
+        <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-4">
+          <p className="text-xs text-gray-500 dark:text-gray-400">Total</p>
+          <p className="mt-1 text-2xl font-semibold text-gray-900 dark:text-gray-100">{metrics.total}</p>
         </div>
-        <div className="rounded-xl border bg-white p-4">
-          <p className="text-xs text-gray-500">Admins</p>
-          <p className="mt-1 text-2xl font-semibold">{metrics.admins}</p>
+        <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-4">
+          <p className="text-xs text-gray-500 dark:text-gray-400">Admins</p>
+          <p className="mt-1 text-2xl font-semibold text-gray-900 dark:text-gray-100">{metrics.admins}</p>
         </div>
-        <div className="rounded-xl border bg-white p-4">
-          <p className="text-xs text-gray-500">Último registro</p>
-          <p className="mt-1 text-lg font-medium">{metrics.lastText}</p>
+        <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-4">
+          <p className="text-xs text-gray-500 dark:text-gray-400">Último registro</p>
+          <p className="mt-1 text-lg font-medium text-gray-900 dark:text-gray-100">{metrics.lastText}</p>
         </div>
       </div>
 
       {/* buscador */}
       <div className="mb-3 flex items-center gap-2">
         <div className="relative w-full sm:w-72">
-          <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+          <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 dark:text-gray-500" />
           <input
             type="text"
             placeholder="Buscar por nombre, correo o rol"
-            className="w-full rounded-md border pl-8 pr-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-200"
+            className="w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 pl-8 pr-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-200 dark:focus:ring-blue-700"
             value={state.query}
             onChange={(e) => dispatch({ type: "SET_QUERY", payload: e.target.value })}
           />
@@ -234,12 +238,12 @@ export default function UsersPage() {
 
       {/* tabla / vacío */}
       {pageUsers.length === 0 ? (
-        <div className="rounded-2xl border bg-white p-8 text-center">
-          <div className="mx-auto mb-4 grid h-12 w-12 place-items-center rounded-full bg-gray-100">
-            <Users className="h-6 w-6 text-gray-500" />
+        <div className="rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-8 text-center">
+          <div className="mx-auto mb-4 grid h-12 w-12 place-items-center rounded-full bg-gray-100 dark:bg-gray-700">
+            <Users className="h-6 w-6 text-gray-500 dark:text-gray-400" />
           </div>
-          <h2 className="text-lg font-semibold text-gray-900">No hay usuarios para mostrar</h2>
-          <p className="mt-1 text-sm text-gray-600">
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">No hay usuarios para mostrar</h2>
+          <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
             Crea el primero para comenzar a asignar permisos.
           </p>
           <Link
@@ -250,9 +254,9 @@ export default function UsersPage() {
           </Link>
         </div>
       ) : (
-        <div className="overflow-x-auto rounded-2xl border bg-white">
+        <div className="overflow-x-auto rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
           <table className="min-w-full text-sm">
-            <thead className="bg-gray-50 text-gray-600">
+            <thead className="bg-gray-50 dark:bg-gray-700 text-gray-600 dark:text-gray-300">
               <tr>
                 <th className="px-4 py-2">
                   <input
@@ -281,23 +285,24 @@ export default function UsersPage() {
             </thead>
             <tbody>
               {pageUsers.map((user) => (
-                <tr key={user.id} className="border-t">
+                <tr key={user.id} className="border-t border-gray-200 dark:border-gray-600">
                   <td className="px-4 py-2">
                     <input
                       type="checkbox"
                       checked={state.selected.has(user.id)}
                       onChange={() => dispatch({ type: "TOGGLE_SELECT", payload: user.id })}
+                      className="rounded border-gray-300 dark:border-gray-600 text-blue-600 focus:ring-blue-500 dark:focus:ring-blue-600"
                     />
                   </td>
-                  <td className="px-4 py-2">{user.name}</td>
-                  <td className="px-4 py-2">{user.email}</td>
+                  <td className="px-4 py-2 text-gray-900 dark:text-gray-100">{user.name}</td>
+                  <td className="px-4 py-2 text-gray-900 dark:text-gray-100">{user.email}</td>
                   <td className="px-4 py-2 text-center">
                     <span
                       onClick={() => dispatch({ type: "TOGGLE_ROLE", payload: user.id })}
                       className={`inline-flex cursor-pointer rounded-full px-2 py-0.5 text-xs ${
                         user.role === "admin"
-                          ? "bg-amber-100 text-amber-800"
-                          : "bg-gray-100 text-gray-700"
+                          ? "bg-amber-100 dark:bg-amber-900/30 text-amber-800 dark:text-amber-300"
+                          : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300"
                       }`}
                       title="Cambiar rol"
                     >
@@ -308,22 +313,22 @@ export default function UsersPage() {
                     <button
                       onClick={() => dispatch({ type: "TOGGLE_ACTIVE", payload: user.id })}
                       className={`rounded-full px-2 py-0.5 text-xs ${
-                        user.active ? "bg-green-100 text-green-700" : "bg-rose-100 text-rose-700"
+                        user.active ? "bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300" : "bg-rose-100 dark:bg-rose-900/30 text-rose-700 dark:text-rose-300"
                       }`}
                     >
                       {user.active ? "Activo" : "Inactivo"}
                     </button>
                   </td>
-                  <td className="px-4 py-2 text-center">{formatDate(user.createdAt)}</td>
+                  <td className="px-4 py-2 text-center text-gray-900 dark:text-gray-100">{formatDate(user.createdAt)}</td>
                   <td className="px-4 py-2 text-center">
                     <button
                       onClick={() =>
                         dispatch({ type: "SELECT_ALL", payload: [user.id] }) ||
                         dispatch({ type: "DELETE_SELECTED" })
                       }
-                      className="rounded-md border px-2 py-1 hover:bg-rose-50"
+                      className="rounded-md border border-gray-300 dark:border-gray-600 px-2 py-1 hover:bg-rose-50 dark:hover:bg-rose-900/30 text-gray-700 dark:text-gray-300"
                     >
-                      <Trash2 className="h-4 w-4 text-rose-600" />
+                      <Trash2 className="h-4 w-4 text-rose-600 dark:text-rose-400" />
                     </button>
                   </td>
                 </tr>
@@ -332,25 +337,25 @@ export default function UsersPage() {
           </table>
 
           {/* paginación */}
-          <div className="flex items-center justify-between p-3">
-            <p className="text-xs text-gray-500">
+          <div className="flex items-center justify-between p-3 border-t border-gray-200 dark:border-gray-600">
+            <p className="text-xs text-gray-500 dark:text-gray-400">
               Mostrando {start + 1}–{Math.min(end, total)} de {total}
             </p>
             <div className="flex items-center gap-1">
               <button
                 disabled={page === 1}
                 onClick={() => dispatch({ type: "SET_PAGE", payload: page - 1 })}
-                className="rounded-md border p-1 disabled:opacity-40"
+                className="rounded-md border border-gray-300 dark:border-gray-600 p-1 disabled:opacity-40 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
               >
                 <ChevronLeft className="h-4 w-4" />
               </button>
-              <span className="px-2 text-sm">
+              <span className="px-2 text-sm text-gray-700 dark:text-gray-300">
                 {page} / {totalPages}
               </span>
               <button
                 disabled={page === totalPages}
                 onClick={() => dispatch({ type: "SET_PAGE", payload: page + 1 })}
-                className="rounded-md border p-1 disabled:opacity-40"
+                className="rounded-md border border-gray-300 dark:border-gray-600 p-1 disabled:opacity-40 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
               >
                 <ChevronRight className="h-4 w-4" />
               </button>

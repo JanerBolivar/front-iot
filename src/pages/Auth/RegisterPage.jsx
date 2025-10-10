@@ -6,6 +6,7 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/com
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { Home } from "lucide-react";
 
 
 
@@ -38,7 +39,18 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="min-h-screen grid place-items-center bg-gray-50 p-4">
+    <div className="min-h-screen grid place-items-center bg-gray-50 dark:bg-gray-900 p-4">
+      {/* Botón para volver al inicio */}
+      <div className="absolute top-4 left-4">
+        <Link
+          to="/docs"
+          className="inline-flex items-center gap-2 rounded-md border border-gray-300 dark:border-gray-600 px-3 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+        >
+          <Home className="h-4 w-4" />
+          Volver al inicio
+        </Link>
+      </div>
+
       <Card className="w-full max-w-md">
         <CardHeader>
           <CardTitle>Crear cuenta</CardTitle>

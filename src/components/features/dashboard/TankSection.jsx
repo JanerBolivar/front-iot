@@ -55,56 +55,56 @@ const TankSection = () => {
 
   return (
     <div className="space-y-8">
-      <div className="bg-gradient-to-br from-cyan-50 to-blue-100 rounded-2xl p-8 border border-cyan-200">
-        <h2 className="text-3xl font-bold text-gray-800 mb-4 flex items-center">
+      <div className="bg-gradient-to-br from-cyan-50 to-blue-100 dark:from-cyan-900/30 dark:to-blue-900/30 rounded-2xl p-8 border border-cyan-200 dark:border-cyan-700">
+        <h2 className="text-3xl font-bold text-gray-800 dark:text-gray-200 mb-4 flex items-center">
           <Droplets className="w-8 h-8 text-cyan-600 mr-3" />
           Tanque de Almacenamiento 500L
         </h2>
-        <p className="text-gray-700 text-lg">
+        <p className="text-gray-700 dark:text-gray-300 text-lg">
           Recipiente cilíndrico vertical de polietileno de alta densidad para 
           almacenamiento de agua.
         </p>
       </div>
 
       <div className="grid lg:grid-cols-2 gap-8">
-        <div className="bg-white rounded-xl p-6 border shadow-sm">
-          <h3 className="text-xl font-semibold text-gray-800 mb-4">
+        <div className="bg-white dark:bg-gray-800 rounded-xl p-6 border border-gray-200 dark:border-gray-700 shadow-sm">
+          <h3 className="text-xl font-semibold text-gray-800 dark:text-gray-200 mb-4">
             Especificaciones Técnicas
           </h3>
           <div className="space-y-4">
-            <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
-              <span className="font-medium text-gray-700">Capacidad:</span>
-              <span className="text-gray-800">500 Litros</span>
+            <div className="flex justify-between items-center p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
+              <span className="font-medium text-gray-700 dark:text-gray-300">Capacidad:</span>
+              <span className="text-gray-800 dark:text-gray-200">500 Litros</span>
             </div>
-            <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
-              <span className="font-medium text-gray-700">Diámetro Inferior:</span>
-              <span className="text-gray-800">0.65 m</span>
+            <div className="flex justify-between items-center p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
+              <span className="font-medium text-gray-700 dark:text-gray-300">Diámetro Inferior:</span>
+              <span className="text-gray-800 dark:text-gray-200">0.65 m</span>
             </div>
-            <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
-              <span className="font-medium text-gray-700">Diámetro Superior:</span>
-              <span className="text-gray-800">1.02 m</span>
+            <div className="flex justify-between items-center p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
+              <span className="font-medium text-gray-700 dark:text-gray-300">Diámetro Superior:</span>
+              <span className="text-gray-800 dark:text-gray-200">1.02 m</span>
             </div>
-            <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
-              <span className="font-medium text-gray-700">Altura:</span>
-              <span className="text-gray-800">1.15 m</span>
+            <div className="flex justify-between items-center p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
+              <span className="font-medium text-gray-700 dark:text-gray-300">Altura:</span>
+              <span className="text-gray-800 dark:text-gray-200">1.15 m</span>
             </div>
-            <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
-              <span className="font-medium text-gray-700">Material:</span>
-              <span className="text-gray-800">PEAD</span>
+            <div className="flex justify-between items-center p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
+              <span className="font-medium text-gray-700 dark:text-gray-300">Material:</span>
+              <span className="text-gray-800 dark:text-gray-200">PEAD</span>
             </div>
           </div>
         </div>
 
-        <div className="bg-white rounded-xl p-6 border shadow-sm">
-          <h3 className="text-xl font-semibold text-gray-800 mb-4">
+        <div className="bg-white dark:bg-gray-800 rounded-xl p-6 border border-gray-200 dark:border-gray-700 shadow-sm">
+          <h3 className="text-xl font-semibold text-gray-800 dark:text-gray-200 mb-4">
             Características del Diseño
           </h3>
           <div className="space-y-4">
             <div className="flex items-start space-x-3">
               <div className="bg-cyan-500 w-3 h-3 rounded-full mt-2"></div>
               <div>
-                <p className="font-medium text-gray-800">Forma Cilíndrica Vertical</p>
-                <p className="text-gray-600">
+                <p className="font-medium text-gray-800 dark:text-gray-200">Forma Cilíndrica Vertical</p>
+                <p className="text-gray-600 dark:text-gray-400">
                   Diseño optimizado basado en tanques comerciales estándar
                 </p>
               </div>
@@ -112,8 +112,8 @@ const TankSection = () => {
             <div className="flex items-start space-x-3">
               <div className="bg-blue-500 w-3 h-3 rounded-full mt-2"></div>
               <div>
-                <p className="font-medium text-gray-800">Superficie Translúcida</p>
-                <p className="text-gray-600">
+                <p className="font-medium text-gray-800 dark:text-gray-200">Superficie Translúcida</p>
+                <p className="text-gray-600 dark:text-gray-400">
                   Simula polietileno de alta densidad con texturas realistas
                 </p>
               </div>
@@ -121,15 +121,15 @@ const TankSection = () => {
             <div className="flex items-start space-x-3">
               <div className="bg-indigo-500 w-3 h-3 rounded-full mt-2"></div>
               <div>
-                <p className="font-medium text-gray-800">Tapa Superior Removible</p>
-                <p className="text-gray-600">Acceso para mantenimiento y limpieza</p>
+                <p className="font-medium text-gray-800 dark:text-gray-200">Tapa Superior Removible</p>
+                <p className="text-gray-600 dark:text-gray-400">Acceso para mantenimiento y limpieza</p>
               </div>
             </div>
             <div className="flex items-start space-x-3">
               <div className="bg-purple-500 w-3 h-3 rounded-full mt-2"></div>
               <div>
-                <p className="font-medium text-gray-800">Orificios de Conexión</p>
-                <p className="text-gray-600">Entrada y salida para válvulas y sensores</p>
+                <p className="font-medium text-gray-800 dark:text-gray-200">Orificios de Conexión</p>
+                <p className="text-gray-600 dark:text-gray-400">Entrada y salida para válvulas y sensores</p>
               </div>
             </div>
           </div>
@@ -137,8 +137,8 @@ const TankSection = () => {
       </div>
 
       {/* Demostración Interactiva del Tanque */}
-      <div className="bg-white rounded-xl p-6 border shadow-sm">
-        <h3 className="text-xl font-semibold text-gray-800 mb-6">
+      <div className="bg-white dark:bg-gray-800 rounded-xl p-6 border border-gray-200 dark:border-gray-700 shadow-sm">
+        <h3 className="text-xl font-semibold text-gray-800 dark:text-gray-200 mb-6">
           🎮 Demostración Interactiva - Animaciones Mejoradas
         </h3>
         
@@ -202,7 +202,7 @@ const TankSection = () => {
 
               {/* Control de válvula */}
               <div className="flex items-center justify-center gap-4">
-                <span className="text-sm font-medium text-gray-700">Válvula:</span>
+                <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Válvula:</span>
                 <button
                   onClick={handleValveToggle}
                   className={`px-4 py-2 rounded-lg font-medium transition-colors ${
@@ -217,7 +217,7 @@ const TankSection = () => {
 
               {/* Control de velocidad */}
               <div className="space-y-2">
-                <label className="text-sm font-medium text-gray-700">
+                <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
                   Velocidad de animación: {animationSpeed}ms
                 </label>
                 <input
@@ -235,12 +235,12 @@ const TankSection = () => {
 
           {/* Descripción de las mejoras */}
           <div className="space-y-6">
-            <div className="bg-gradient-to-br from-blue-50 to-cyan-50 rounded-lg p-4 border border-blue-200">
-              <h4 className="font-semibold text-gray-800 mb-3 flex items-center">
+            <div className="bg-gradient-to-br from-blue-50 to-cyan-50 dark:from-blue-900/30 dark:to-cyan-900/30 rounded-lg p-4 border border-blue-200 dark:border-blue-700">
+              <h4 className="font-semibold text-gray-800 dark:text-gray-200 mb-3 flex items-center">
                 <Droplets className="w-5 h-5 text-blue-600 mr-2" />
                 🎨 Mejoras en las Animaciones
               </h4>
-              <ul className="space-y-2 text-sm text-gray-700">
+              <ul className="space-y-2 text-sm text-gray-700 dark:text-gray-300">
                 <li className="flex items-start">
                   <span className="w-2 h-2 bg-blue-500 rounded-full mt-2 mr-3 flex-shrink-0"></span>
                   <span><strong>Ondas Multi-capa:</strong> 5 capas de ondas con diferentes frecuencias y opacidades para un efecto más realista</span>
@@ -264,11 +264,11 @@ const TankSection = () => {
               </ul>
             </div>
 
-            <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-lg p-4 border border-green-200">
-              <h4 className="font-semibold text-gray-800 mb-3 flex items-center">
+            <div className="bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-900/30 dark:to-emerald-900/30 rounded-lg p-4 border border-green-200 dark:border-green-700">
+              <h4 className="font-semibold text-gray-800 dark:text-gray-200 mb-3 flex items-center">
                 ⚡ Controles Interactivos
               </h4>
-              <ul className="space-y-2 text-sm text-gray-700">
+              <ul className="space-y-2 text-sm text-gray-700 dark:text-gray-300">
                 <li className="flex items-start">
                   <span className="w-2 h-2 bg-green-500 rounded-full mt-2 mr-3 flex-shrink-0"></span>
                   <span><strong>Animación Automática:</strong> Llena y vacía el tanque automáticamente</span>
@@ -288,26 +288,26 @@ const TankSection = () => {
               </ul>
             </div>
 
-            <div className="bg-gradient-to-br from-amber-50 to-orange-50 rounded-lg p-4 border border-amber-200">
-              <h4 className="font-semibold text-gray-800 mb-3 flex items-center">
+            <div className="bg-gradient-to-br from-amber-50 to-orange-50 dark:from-amber-900/30 dark:to-orange-900/30 rounded-lg p-4 border border-amber-200 dark:border-amber-700">
+              <h4 className="font-semibold text-gray-800 dark:text-gray-200 mb-3 flex items-center">
                 🔧 Detalles Técnicos
               </h4>
               <div className="grid grid-cols-2 gap-4 text-sm">
                 <div>
-                  <span className="font-medium text-gray-700">Ondas:</span>
-                  <p className="text-gray-600">5 capas con frecuencias variables</p>
+                  <span className="font-medium text-gray-700 dark:text-gray-300">Ondas:</span>
+                  <p className="text-gray-600 dark:text-gray-400">5 capas con frecuencias variables</p>
                 </div>
                 <div>
-                  <span className="font-medium text-gray-700">Burbujas:</span>
-                  <p className="text-gray-600">12 burbujas con 3 tamaños</p>
+                  <span className="font-medium text-gray-700 dark:text-gray-300">Burbujas:</span>
+                  <p className="text-gray-600 dark:text-gray-400">12 burbujas con 3 tamaños</p>
                 </div>
                 <div>
-                  <span className="font-medium text-gray-700">Gradientes:</span>
-                  <p className="text-gray-600">3 gradientes especializados</p>
+                  <span className="font-medium text-gray-700 dark:text-gray-300">Gradientes:</span>
+                  <p className="text-gray-600 dark:text-gray-400">3 gradientes especializados</p>
                 </div>
                 <div>
-                  <span className="font-medium text-gray-700">Animaciones:</span>
-                  <p className="text-gray-600">15+ keyframes diferentes</p>
+                  <span className="font-medium text-gray-700 dark:text-gray-300">Animaciones:</span>
+                  <p className="text-gray-600 dark:text-gray-400">15+ keyframes diferentes</p>
                 </div>
               </div>
             </div>
@@ -316,8 +316,8 @@ const TankSection = () => {
       </div>
 
       {/* Demostración de Variantes del Tanque */}
-      <div className="bg-white rounded-xl p-6 border shadow-sm">
-        <h3 className="text-xl font-semibold text-gray-800 mb-6">
+      <div className="bg-white dark:bg-gray-800 rounded-xl p-6 border border-gray-200 dark:border-gray-700 shadow-sm">
+        <h3 className="text-xl font-semibold text-gray-800 dark:text-gray-200 mb-6">
           🎨 Variantes del Tanque con Animaciones Mejoradas
         </h3>
         
@@ -335,8 +335,8 @@ const TankSection = () => {
               showPercent={true}
               className="mx-auto"
             />
-            <h4 className="font-medium text-gray-800">Rectangular</h4>
-            <p className="text-sm text-gray-600">Forma estándar con bordes redondeados</p>
+            <h4 className="font-medium text-gray-800 dark:text-gray-200">Rectangular</h4>
+            <p className="text-sm text-gray-600 dark:text-gray-400">Forma estándar con bordes redondeados</p>
           </div>
 
           {/* Variante Drum */}
@@ -352,8 +352,8 @@ const TankSection = () => {
               showPercent={true}
               className="mx-auto"
             />
-            <h4 className="font-medium text-gray-800">Tambor</h4>
-            <p className="text-sm text-gray-600">Diseño más robusto y cilíndrico</p>
+            <h4 className="font-medium text-gray-800 dark:text-gray-200">Tambor</h4>
+            <p className="text-sm text-gray-600 dark:text-gray-400">Diseño más robusto y cilíndrico</p>
           </div>
 
           {/* Variante Cylinder */}
@@ -369,21 +369,21 @@ const TankSection = () => {
               showPercent={true}
               className="mx-auto"
             />
-            <h4 className="font-medium text-gray-800">Cilíndrico</h4>
-            <p className="text-sm text-gray-600">Forma completamente cilíndrica</p>
+            <h4 className="font-medium text-gray-800 dark:text-gray-200">Cilíndrico</h4>
+            <p className="text-sm text-gray-600 dark:text-gray-400">Forma completamente cilíndrica</p>
           </div>
         </div>
       </div>
 
-      <div className="bg-white rounded-xl p-6 border shadow-sm">
-        <h3 className="text-xl font-semibold text-gray-800 mb-4">Proceso de Modelado</h3>
+      <div className="bg-white dark:bg-gray-800 rounded-xl p-6 border border-gray-200 dark:border-gray-700 shadow-sm">
+        <h3 className="text-xl font-semibold text-gray-800 dark:text-gray-200 mb-4">Proceso de Modelado</h3>
         <div className="grid md:grid-cols-3 gap-6">
           <div className="text-center">
             <div className="bg-cyan-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-3">
               <span className="text-2xl font-bold text-cyan-600">1</span>
             </div>
-            <h4 className="font-medium text-gray-800 mb-2">Diseño Base</h4>
-            <p className="text-gray-600 text-sm">
+            <h4 className="font-medium text-gray-800 dark:text-gray-200 mb-2">Diseño Base</h4>
+            <p className="text-gray-600 dark:text-gray-400 text-sm">
               Modelado del tanque sin texturas siguiendo dimensiones reales
             </p>
           </div>
@@ -391,8 +391,8 @@ const TankSection = () => {
             <div className="bg-blue-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-3">
               <span className="text-2xl font-bold text-blue-600">2</span>
             </div>
-            <h4 className="font-medium text-gray-800 mb-2">Texturización</h4>
-            <p className="text-gray-600 text-sm">
+            <h4 className="font-medium text-gray-800 dark:text-gray-200 mb-2">Texturización</h4>
+            <p className="text-gray-600 dark:text-gray-400 text-sm">
               Aplicación de materiales y etiquetas comerciales
             </p>
           </div>
@@ -400,8 +400,8 @@ const TankSection = () => {
             <div className="bg-indigo-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-3">
               <span className="text-2xl font-bold text-indigo-600">3</span>
             </div>
-            <h4 className="font-medium text-gray-800 mb-2">Tapa y Detalles</h4>
-            <p className="text-gray-600 text-sm">
+            <h4 className="font-medium text-gray-800 dark:text-gray-200 mb-2">Tapa y Detalles</h4>
+            <p className="text-gray-600 dark:text-gray-400 text-sm">
               Diseño de tapa removible y detalles estructurales
             </p>
           </div>

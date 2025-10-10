@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { CheckCircle, XCircle, Loader, Wifi, WifiOff, Server, Database, AlertTriangle } from 'lucide-react';
-import apiService from '@/services/api';
 import { urlBackend } from '@/config/envs';
 
 export default function ApiDiagnostic() {

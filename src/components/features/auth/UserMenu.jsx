@@ -48,7 +48,7 @@ export default function UserMenu() {
   const handleLogout = () => {
     setOpen(false);
     logout();
-    navigate("/", { replace: true });
+    navigate("/docs", { replace: true });
   };
 
   return (

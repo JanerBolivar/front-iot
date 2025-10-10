@@ -15,9 +15,8 @@ export default function AddDeviceModal({ isOpen, onClose, onSave }) {
   } = useForm({
     defaultValues: {
       name: '',
-      type: 'tank',
-      capacity: 500,
-      unit: 'liters',
+      type: 'esp32',
+      specs: '240mhz',
       location: '',
       building: '',
       floor: '',
@@ -35,34 +34,50 @@ export default function AddDeviceModal({ isOpen, onClose, onSave }) {
   const deviceType = watch('type');
 
   const deviceTypes = [
-    { value: 'tank', label: 'Tanque de Agua', icon: Droplets },
-    { value: 'sensor', label: 'Sensor Ultrasónico', icon: Wifi },
-    { value: 'valve', label: 'Válvula Solenoide', icon: Settings },
-    { value: 'controller', label: 'Controlador IoT', icon: Settings },
-    { value: 'pump', label: 'Bomba de Agua', icon: Settings }
+    { value: 'esp32', label: 'ESP32 DevKit V1', icon: Wifi },
+    { value: 'esp32-s3', label: 'ESP32-S3', icon: Wifi },
+    { value: 'esp8266', label: 'ESP8266 NodeMCU', icon: Wifi },
+    { value: 'arduino-uno', label: 'Arduino UNO R3', icon: Settings },
+    { value: 'arduino-nano', label: 'Arduino Nano', icon: Settings },
+    { value: 'raspberry-pi', label: 'Raspberry Pi 4', icon: Settings }
   ];
 
-  const capacityUnits = {
-    tank: [
-      { value: 'liters', label: 'Litros' },
-      { value: 'gallons', label: 'Galones' },
-      { value: 'cubic_meters', label: 'Metros Cúbicos' }
+  const boardSpecs = {
+    esp32: [
+      { value: '240mhz', label: '240 MHz (Dual Core)' },
+      { value: '520kb', label: '520 KB SRAM' },
+      { value: '4mb', label: '4 MB Flash' },
+      { value: 'wifi-bluetooth', label: 'WiFi + Bluetooth' }
     ],
-    sensor: [
-      { value: 'meters', label: 'Metros' },
-      { value: 'centimeters', label: 'Centímetros' },
-      { value: 'millimeters', label: 'Milímetros' }
+    'esp32-s3': [
+      { value: '240mhz', label: '240 MHz (Dual Core)' },
+      { value: '512kb', label: '512 KB SRAM' },
+      { value: '8mb', label: '8 MB Flash' },
+      { value: 'wifi-bluetooth', label: 'WiFi + Bluetooth' }
     ],
-    valve: [
-      { value: 'inches', label: 'Pulgadas' },
-      { value: 'millimeters', label: 'Milímetros' }
+    'esp8266': [
+      { value: '80mhz', label: '80 MHz' },
+      { value: '160kb', label: '160 KB SRAM' },
+      { value: '4mb', label: '4 MB Flash' },
+      { value: 'wifi-only', label: 'WiFi' }
     ],
-    controller: [
-      { value: 'units', label: 'Unidades' }
+    'arduino-uno': [
+      { value: '16mhz', label: '16 MHz' },
+      { value: '2kb', label: '2 KB SRAM' },
+      { value: '32kb', label: '32 KB Flash' },
+      { value: 'no-wireless', label: 'Sin conectividad inalámbrica' }
     ],
-    pump: [
-      { value: 'hp', label: 'Caballos de Fuerza' },
-      { value: 'watts', label: 'Watts' }
+    'arduino-nano': [
+      { value: '16mhz', label: '16 MHz' },
+      { value: '2kb', label: '2 KB SRAM' },
+      { value: '32kb', label: '32 KB Flash' },
+      { value: 'no-wireless', label: 'Sin conectividad inalámbrica' }
+    ],
+    'raspberry-pi': [
+      { value: '1800mhz', label: '1.8 GHz (Quad Core)' },
+      { value: '4gb', label: '4 GB RAM' },
+      { value: '32gb', label: '32 GB SD Card' },
+      { value: 'wifi-bluetooth', label: 'WiFi + Bluetooth' }
     ]
   };
 
@@ -82,11 +97,12 @@ export default function AddDeviceModal({ isOpen, onClose, onSave }) {
       };
 
       onSave(deviceData);
-      toast.success('Dispositivo agregado exitosamente');
+      toast.success('Placa agregada exitosamente');
       reset();
       onClose();
     } catch (error) {
-      toast.error('Error al agregar el dispositivo');
+      console.error('Error adding device:', error);
+      toast.error('Error al agregar la placa');
     } finally {
       setLoading(false);
     }
@@ -100,292 +116,249 @@ export default function AddDeviceModal({ isOpen, onClose, onSave }) {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-        {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
-          <div className="flex items-center gap-3">
-            <div className="bg-blue-100 dark:bg-blue-900 p-2 rounded-lg">
-              <Settings className="w-6 h-6 text-blue-600 dark:text-blue-400" />
+    <div
+      className="fixed inset-0 z-[60] grid place-items-center bg-black/40 p-4"
+      onMouseDown={(e) => {
+        if (e.target === e.currentTarget) handleClose();
+      }}
+    >
+      <div className="w-full max-w-2xl overflow-hidden rounded-2xl bg-white shadow-xl">
+        <div className="grid max-h-[85vh] grid-rows-[auto_1fr_auto]">
+        
+          {/* Header */}
+          <div className="flex items-center justify-between border-b p-4">
+            <div className="min-w-0">
+              <h3 className="truncate text-lg font-semibold">
+                Agregar Nueva Placa IoT
+              </h3>
+              <p className="text-xs text-gray-500">Configura los detalles de tu placa de desarrollo</p>
             </div>
-            <div>
-              <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
-                Agregar Nuevo Dispositivo
-              </h2>
-              <p className="text-sm text-gray-500 dark:text-gray-400">
-                Configura todos los detalles del dispositivo IoT
-              </p>
+            <div className="flex items-center gap-2">
+              <button
+                aria-label="Cerrar"
+                onClick={handleClose}
+                className="rounded-md p-2 text-gray-600 hover:bg-gray-100"
+              >
+                <X className="h-5 w-5" />
+              </button>
             </div>
           </div>
-          <button
-            onClick={handleClose}
-            className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
-          >
-            <X className="w-6 h-6" />
-          </button>
-        </div>
 
-        {/* Form */}
-        <form onSubmit={handleSubmit(onSubmit)} className="p-6 space-y-6">
-          {/* Información Básica */}
-          <div className="space-y-4">
-            <h3 className="text-lg font-medium text-gray-900 dark:text-white flex items-center gap-2">
-              <Settings className="w-5 h-5" />
-              Información Básica
-            </h3>
+          {/* Body */}
+          <div className="overflow-y-auto p-4">
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+            {/* Información Básica */}
+            <div className="space-y-4">
+              <h3 className="text-lg font-medium text-gray-900 dark:text-white flex items-center gap-2">
+                <Settings className="w-5 h-5" />
+                Información Básica
+              </h3>
             
-            <div className="grid md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  Nombre del Dispositivo *
-                </label>
-                <input
-                  {...register('name', { required: 'El nombre es obligatorio' })}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
-                  placeholder="Ej: Tanque Principal A"
-                />
-                {errors.name && (
-                  <p className="text-red-500 text-xs mt-1 flex items-center gap-1">
-                    <AlertCircle className="w-3 h-3" />
-                    {errors.name.message}
-                  </p>
-                )}
+              <div className="grid md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    Nombre del Dispositivo *
+                  </label>
+                  <input
+                    {...register('name', { required: 'El nombre es obligatorio' })}
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
+                    placeholder="Ej: Placa Principal ESP32"
+                  />
+                  {errors.name && (
+                    <p className="text-red-500 text-xs mt-1 flex items-center gap-1">
+                      <AlertCircle className="w-3 h-3" />
+                      {errors.name.message}
+                    </p>
+                  )}
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    Tipo de Placa *
+                  </label>
+                  <select
+                    {...register('type', { required: 'El tipo de placa es obligatorio' })}
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
+                  >
+                    {deviceTypes.map(type => (
+                      <option key={type.value} value={type.value}>
+                        {type.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
               </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  Tipo de Dispositivo *
-                </label>
-                <select
-                  {...register('type', { required: 'El tipo es obligatorio' })}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
-                >
-                  {deviceTypes.map(type => (
-                    <option key={type.value} value={type.value}>
-                      {type.label}
-                    </option>
-                  ))}
-                </select>
+              <div className="grid md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    Especificaciones *
+                  </label>
+                  <select
+                    {...register('specs', { required: 'Las especificaciones son obligatorias' })}
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
+                  >
+                    {boardSpecs[deviceType]?.map(spec => (
+                      <option key={spec.value} value={spec.value}>
+                        {spec.label}
+                      </option>
+                    )) || <option value="standard">Estándar</option>}
+                  </select>
+                  {errors.specs && (
+                    <p className="text-red-500 text-xs mt-1 flex items-center gap-1">
+                      <AlertCircle className="w-3 h-3" />
+                      {errors.specs.message}
+                    </p>
+                  )}
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    Estado
+                  </label>
+                  <select
+                    {...register('status')}
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
+                  >
+                    <option value="active">Activo</option>
+                    <option value="inactive">Inactivo</option>
+                    <option value="maintenance">Mantenimiento</option>
+                  </select>
+                </div>
               </div>
             </div>
 
-            <div className="grid md:grid-cols-2 gap-4">
+            {/* Ubicación */}
+            <div className="space-y-4">
+              <h3 className="text-lg font-medium text-gray-900 dark:text-white flex items-center gap-2">
+                <MapPin className="w-5 h-5" />
+                Ubicación
+              </h3>
+              
+              <div className="grid md:grid-cols-3 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    Edificio/Bloque *
+                  </label>
+                  <input
+                    {...register('building', { required: 'El edificio es obligatorio' })}
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
+                    placeholder="Bloque A"
+                  />
+                  {errors.building && (
+                    <p className="text-red-500 text-xs mt-1 flex items-center gap-1">
+                      <AlertCircle className="w-3 h-3" />
+                      {errors.building.message}
+                    </p>
+                  )}
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    Piso
+                  </label>
+                  <input
+                    {...register('floor')}
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
+                    placeholder="1"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    Sala/Laboratorio
+                  </label>
+                  <input
+                    {...register('room')}
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
+                    placeholder="Lab 1"
+                  />
+                </div>
+              </div>
+
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  Capacidad/Tamaño *
+                  Ubicación Específica
+                </label>
+                <input
+                  {...register('location')}
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
+                  placeholder="Cerca de la entrada principal"
+                />
+              </div>
+            </div>
+
+            {/* Descripción */}
+            <div className="space-y-4">
+              <h3 className="text-lg font-medium text-gray-900 dark:text-white flex items-center gap-2">
+                <Settings className="w-5 h-5" />
+                Información Adicional
+              </h3>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  Descripción
+                </label>
+                <textarea
+                  {...register('description')}
+                  rows={3}
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
+                  placeholder="Descripción de la placa y su uso..."
+                />
+              </div>
+            </div>
+
+            {/* Mantenimiento */}
+            <div className="space-y-4">
+              <h3 className="text-lg font-medium text-gray-900 dark:text-white flex items-center gap-2">
+                <Droplets className="w-5 h-5" />
+                Configuración de Mantenimiento
+              </h3>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  Intervalo de Mantenimiento (días)
                 </label>
                 <input
                   type="number"
-                  {...register('capacity', { 
-                    required: 'La capacidad es obligatoria',
-                    min: { value: 1, message: 'Debe ser mayor a 0' }
+                  {...register('maintenanceInterval', { 
+                    min: { value: 1, message: 'Mínimo 1 día' },
+                    max: { value: 365, message: 'Máximo 365 días' }
                   })}
                   className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
-                  placeholder="500"
+                  placeholder="30"
                 />
-                {errors.capacity && (
+                {errors.maintenanceInterval && (
                   <p className="text-red-500 text-xs mt-1 flex items-center gap-1">
                     <AlertCircle className="w-3 h-3" />
-                    {errors.capacity.message}
+                    {errors.maintenanceInterval.message}
                   </p>
                 )}
               </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  Unidad
-                </label>
-                <select
-                  {...register('unit')}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
-                >
-                  {capacityUnits[deviceType]?.map(unit => (
-                    <option key={unit.value} value={unit.value}>
-                      {unit.label}
-                    </option>
-                  )) || <option value="units">Unidades</option>}
-                </select>
-              </div>
             </div>
+
+            {/* Actions */}
+            <div className="flex justify-end gap-3 pt-6">
+              <button
+                type="button"
+                onClick={handleClose}
+                className="px-4 py-2 text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+              >
+                Cancelar
+              </button>
+              
+              <LoadingButton
+                type="submit"
+                loading={loading}
+                className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2"
+              >
+                <Save className="w-4 h-4" />
+                Guardar Placa
+              </LoadingButton>
+            </div>
+          </form>
           </div>
-
-          {/* Ubicación */}
-          <div className="space-y-4">
-            <h3 className="text-lg font-medium text-gray-900 dark:text-white flex items-center gap-2">
-              <MapPin className="w-5 h-5" />
-              Ubicación
-            </h3>
-            
-            <div className="grid md:grid-cols-3 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  Edificio/Bloque *
-                </label>
-                <input
-                  {...register('building', { required: 'El edificio es obligatorio' })}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
-                  placeholder="Bloque A"
-                />
-                {errors.building && (
-                  <p className="text-red-500 text-xs mt-1 flex items-center gap-1">
-                    <AlertCircle className="w-3 h-3" />
-                    {errors.building.message}
-                  </p>
-                )}
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  Piso
-                </label>
-                <input
-                  {...register('floor')}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
-                  placeholder="1"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  Sala/Laboratorio
-                </label>
-                <input
-                  {...register('room')}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
-                  placeholder="Lab 1"
-                />
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                Ubicación Específica
-              </label>
-              <input
-                {...register('location')}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
-                placeholder="Cerca de la entrada principal"
-              />
-            </div>
-          </div>
-
-          {/* Información Técnica */}
-          <div className="space-y-4">
-            <h3 className="text-lg font-medium text-gray-900 dark:text-white flex items-center gap-2">
-              <Settings className="w-5 h-5" />
-              Información Técnica
-            </h3>
-            
-            <div className="grid md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  Fabricante
-                </label>
-                <input
-                  {...register('manufacturer')}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
-                  placeholder="Ej: Siemens, Schneider Electric"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  Modelo
-                </label>
-                <input
-                  {...register('model')}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
-                  placeholder="Ej: HC-SR04, ESP32"
-                />
-              </div>
-            </div>
-
-            <div className="grid md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  Número de Serie
-                </label>
-                <input
-                  {...register('serialNumber')}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
-                  placeholder="SN-123456789"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  Fecha de Instalación
-                </label>
-                <input
-                  type="date"
-                  {...register('installationDate')}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
-                />
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                Descripción
-              </label>
-              <textarea
-                {...register('description')}
-                rows={3}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
-                placeholder="Descripción detallada del dispositivo y su función..."
-              />
-            </div>
-          </div>
-
-          {/* Mantenimiento */}
-          <div className="space-y-4">
-            <h3 className="text-lg font-medium text-gray-900 dark:text-white flex items-center gap-2">
-              <Droplets className="w-5 h-5" />
-              Configuración de Mantenimiento
-            </h3>
-            
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                Intervalo de Mantenimiento (días)
-              </label>
-              <input
-                type="number"
-                {...register('maintenanceInterval', { 
-                  min: { value: 1, message: 'Mínimo 1 día' },
-                  max: { value: 365, message: 'Máximo 365 días' }
-                })}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
-                placeholder="30"
-              />
-              {errors.maintenanceInterval && (
-                <p className="text-red-500 text-xs mt-1 flex items-center gap-1">
-                  <AlertCircle className="w-3 h-3" />
-                  {errors.maintenanceInterval.message}
-                </p>
-              )}
-            </div>
-          </div>
-
-          {/* Actions */}
-          <div className="flex justify-end gap-3 pt-6 border-t border-gray-200 dark:border-gray-700">
-            <button
-              type="button"
-              onClick={handleClose}
-              className="px-4 py-2 text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
-            >
-              Cancelar
-            </button>
-            
-            <LoadingButton
-              type="submit"
-              loading={loading}
-              className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2"
-            >
-              <Save className="w-4 h-4" />
-              Guardar Dispositivo
-            </LoadingButton>
-          </div>
-        </form>
+        </div>
       </div>
     </div>
   );

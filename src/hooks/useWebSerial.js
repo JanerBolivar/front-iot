@@ -34,11 +34,11 @@ export default function useWebSerial() {
 
       // Setup streams
       textDecoder.current = new TextDecoderStream();
-      const readableStreamClosed = p.readable.pipeTo(textDecoder.current.writable);
+      p.readable.pipeTo(textDecoder.current.writable);
       readerRef.current = textDecoder.current.readable.getReader();
 
       textEncoder.current = new TextEncoderStream();
-      const writableStreamClosed = textEncoder.current.readable.pipeTo(p.writable);
+      textEncoder.current.readable.pipeTo(p.writable);
       writerRef.current = textEncoder.current.writable.getWriter();
 
       // Loop de lectura
@@ -64,15 +64,25 @@ export default function useWebSerial() {
       readLoopAbort.current.abort = true;
 
       if (readerRef.current) {
-        try { await readerRef.current.cancel(); } catch {}
-        try { await readerRef.current.releaseLock(); } catch {}
+        try { await readerRef.current.cancel(); } catch (error) {
+          console.warn('Error canceling reader:', error);
+        }
+        try { await readerRef.current.releaseLock(); } catch (error) {
+          console.warn('Error releasing reader lock:', error);
+        }
       }
       if (writerRef.current) {
-        try { await writerRef.current.close(); } catch {}
-        try { await writerRef.current.releaseLock(); } catch {}
+        try { await writerRef.current.close(); } catch (error) {
+          console.warn('Error closing writer:', error);
+        }
+        try { await writerRef.current.releaseLock(); } catch (error) {
+          console.warn('Error releasing writer lock:', error);
+        }
       }
       if (port) {
-        try { await port.close(); } catch {}
+        try { await port.close(); } catch (error) {
+          console.warn('Error closing port:', error);
+        }
       }
     } finally {
       setConnected(false);

@@ -2,14 +2,26 @@ import React, { useState } from "react";
 import { NavLink } from "react-router-dom";
 import { documentationItems, extraItems } from "./SidebarData";
 import { Waves, ChevronLeft, ChevronRight, ChevronDown, FileText } from "lucide-react";
+import { useAuth } from "@/context/AuthContext";
 
 export default function Sidebar({ className = "", mobileOpen, setMobileOpen }) {
   const [collapsed, setCollapsed] = useState(false);
   const [docsOpen, setDocsOpen] = useState(true);
+  const { user } = useAuth();
+
+  // Filtrar elementos del menú basado en el rol del usuario
+  const isAdmin = user?.role === 'admin';
+  const filteredExtraItems = extraItems.filter(item => {
+    // Solo mostrar "Usuarios" si es admin
+    if (item.id === 'users') {
+      return isAdmin;
+    }
+    return true;
+  });
 
   // clases base: fijo en móvil (off-canvas), estático en md+
   const base =
-    "bg-white shadow-xl transition-all duration-300 flex flex-col z-40 md:z-auto";
+    "bg-white dark:bg-gray-800 shadow-xl transition-all duration-300 flex flex-col z-40 md:z-auto";
   const mobile =
     "fixed inset-y-0 left-0 w-72 transform " +
     (mobileOpen ? "translate-x-0" : "-translate-x-full");
@@ -30,7 +42,7 @@ export default function Sidebar({ className = "", mobileOpen, setMobileOpen }) {
       <aside className={asideClass}>
 
         {/* Header */}
-        <div className="p-6 border-b border-gray-200">
+        <div className="p-6 border-b border-gray-200 dark:border-gray-700">
           <div className="flex items-center justify-between">
             {!collapsed && (
               <div className="flex items-center gap-3">
@@ -38,8 +50,8 @@ export default function Sidebar({ className = "", mobileOpen, setMobileOpen }) {
                   <Waves className="w-6 h-6 text-white" />
                 </div>
                 <div>
-                  <h1 className="text-lg font-bold text-gray-800">Gemelo Digital</h1>
-                  <p className="text-xs text-gray-500">Control de Agua</p>
+                  <h1 className="text-lg font-bold text-gray-800 dark:text-gray-200">Gemelo Digital</h1>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">Control de Agua</p>
                 </div>
               </div>
             )}
@@ -47,7 +59,7 @@ export default function Sidebar({ className = "", mobileOpen, setMobileOpen }) {
             {/* Botón colapsar (solo escritorio) */}
             <button
               onClick={() => setCollapsed((v) => !v)}
-              className="p-2 hover:bg-gray-100 rounded-lg transition-colors hidden md:inline-flex"
+              className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors hidden md:inline-flex text-gray-600 dark:text-gray-400"
               aria-label="Alternar ancho sidebar"
             >
               {collapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
@@ -58,7 +70,7 @@ export default function Sidebar({ className = "", mobileOpen, setMobileOpen }) {
         {/* Navegación */}
         <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
           {/* Secciones extra (si las mantienes) */}
-          {extraItems.map((item) => {
+          {filteredExtraItems.map((item) => {
             const Icon = item.icon;
             return (
               <NavLink
@@ -68,8 +80,8 @@ export default function Sidebar({ className = "", mobileOpen, setMobileOpen }) {
                 className={({ isActive }) =>
                   `w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 ${
                     isActive
-                      ? "bg-gradient-to-r from-blue-50 to-indigo-50 border-l-4 border-blue-500 text-blue-700"
-                      : "hover:bg-gray-50 text-gray-700"
+                      ? "bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/30 dark:to-indigo-900/30 border-l-4 border-blue-500 text-blue-700 dark:text-blue-300"
+                      : "hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300"
                   }`
                 }
               >
@@ -84,12 +96,12 @@ export default function Sidebar({ className = "", mobileOpen, setMobileOpen }) {
             <button
               onClick={() => setDocsOpen((v) => !v)}
               disabled={collapsed}
-              className={`w-full flex items-center justify-between px-4 py-3 rounded-xl hover:bg-gray-50 text-gray-700 transition-all ${
+              className={`w-full flex items-center justify-between px-4 py-3 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 transition-all ${
                 collapsed ? "justify-center" : ""
               }`}
             >
               <div className="flex items-center gap-3">
-                <FileText className="w-5 h-5 text-gray-600" />
+                <FileText className="w-5 h-5 text-gray-600 dark:text-gray-400" />
                 {!collapsed && <span className="font-medium">Documentación</span>}
               </div>
               {!collapsed && (
@@ -109,8 +121,8 @@ export default function Sidebar({ className = "", mobileOpen, setMobileOpen }) {
                       className={({ isActive }) =>
                         `w-full flex items-center gap-3 px-4 py-2 rounded-lg text-sm transition-all ${
                           isActive
-                            ? "bg-gradient-to-r from-blue-50 to-indigo-50 border-l-4 border-blue-500 text-blue-700"
-                            : "hover:bg-gray-50 text-gray-600"
+                            ? "bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/30 dark:to-indigo-900/30 border-l-4 border-blue-500 text-blue-700 dark:text-blue-300"
+                            : "hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-400"
                         }`
                       }
                     >
@@ -126,9 +138,9 @@ export default function Sidebar({ className = "", mobileOpen, setMobileOpen }) {
 
         {/* Footer */}
         {!collapsed && (
-          <div className="p-4 border-t border-gray-200 text-center">
-            <p className="text-xs text-gray-500 mb-1">Universidad de la Amazonia</p>
-            <p className="text-xs text-gray-400">Ingeniería de Sistemas</p>
+          <div className="p-4 border-t border-gray-200 dark:border-gray-700 text-center">
+            <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Universidad de la Amazonia</p>
+            <p className="text-xs text-gray-400 dark:text-gray-500">Ingeniería de Sistemas</p>
           </div>
         )}
       </aside>

@@ -3,7 +3,7 @@ import { Wrench, Power, Zap, Settings, Gauge, Droplets } from 'lucide-react';
 
 const ValveDemo = () => {
   const [valveOpen, setValveOpen] = useState(false);
-  const [isAnimating, setIsAnimating] = useState(false);
+  // const [isAnimating, setIsAnimating] = useState(false); // No se usa actualmente
   const [waterFlow, setWaterFlow] = useState(0);
   const [pressure, setPressure] = useState(0);
   const [powerConsumption, setPowerConsumption] = useState(0);
@@ -14,20 +14,20 @@ const ValveDemo = () => {
   // Simular efectos de la válvula
   useEffect(() => {
     if (valveOpen) {
-      setIsAnimating(true);
+      // setIsAnimating(true); // Variable no utilizada
       setWaterFlow(85);
       setPressure(2.5);
       setPowerConsumption(12); // Watts
       
       // Simular flujo de agua
       const interval = setInterval(() => {
-        setWaterFlow(prev => 85 + (Math.random() - 0.5) * 10);
-        setPressure(prev => 2.5 + (Math.random() - 0.5) * 0.3);
+        setWaterFlow(85 + (Math.random() - 0.5) * 10);
+        setPressure(2.5 + (Math.random() - 0.5) * 0.3);
       }, 500);
       
       return () => clearInterval(interval);
     } else {
-      setIsAnimating(false);
+      // Variable isAnimating no utilizada
       setWaterFlow(0);
       setPressure(0);
       setPowerConsumption(0);
@@ -63,8 +63,8 @@ const ValveDemo = () => {
   };
 
   return (
-    <div className="bg-white rounded-xl p-6 border shadow-sm">
-      <h3 className="text-xl font-semibold text-gray-800 mb-6 flex items-center">
+    <div className="bg-white dark:bg-gray-800 rounded-xl p-6 border border-gray-200 dark:border-gray-700 shadow-sm">
+      <h3 className="text-xl font-semibold text-gray-800 dark:text-gray-200 mb-6 flex items-center">
         <Wrench className="w-6 h-6 text-green-600 mr-3" />
         🎮 Demostración Interactiva - Válvula Solenoide
       </h3>
@@ -73,7 +73,7 @@ const ValveDemo = () => {
         {/* Visualización de la Válvula */}
         <div className="space-y-6">
           {/* Válvula 3D */}
-          <div className="relative bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl p-8 border border-gray-200">
+          <div className="relative bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-900 rounded-xl p-8 border border-gray-200 dark:border-gray-600">
             <div className="relative h-64 flex items-center justify-center">
               {/* Válvula principal */}
               <div className="relative">
@@ -200,14 +200,14 @@ const ValveDemo = () => {
               </div>
 
               {/* Etiquetas */}
-              <div className="absolute top-4 left-4 bg-white/90 backdrop-blur rounded-lg p-2 shadow-lg">
-                <div className="text-xs font-semibold text-gray-700">ENTRADA</div>
-                <div className="text-xs text-gray-600">Presión: {pressure.toFixed(1)} bar</div>
+              <div className="absolute top-2 left-2 bg-white/90 dark:bg-gray-700/90 backdrop-blur rounded-lg p-2 shadow-lg">
+                <div className="text-xs font-semibold text-gray-700 dark:text-gray-200">ENTRADA</div>
+                <div className="text-xs text-gray-600 dark:text-gray-400">Presión: {pressure.toFixed(1)} bar</div>
               </div>
               
-              <div className="absolute top-4 right-4 bg-white/90 backdrop-blur rounded-lg p-2 shadow-lg">
-                <div className="text-xs font-semibold text-gray-700">SALIDA</div>
-                <div className="text-xs text-gray-600">Flujo: {waterFlow.toFixed(0)} L/min</div>
+              <div className="absolute top-2 right-2 bg-white/90 dark:bg-gray-700/90 backdrop-blur rounded-lg p-2 shadow-lg">
+                <div className="text-xs font-semibold text-gray-700 dark:text-gray-200">SALIDA</div>
+                <div className="text-xs text-gray-600 dark:text-gray-400">Flujo: {waterFlow.toFixed(0)} L/min</div>
               </div>
             </div>
 
@@ -255,7 +255,7 @@ const ValveDemo = () => {
             {/* Control de nivel objetivo (solo en modo auto) */}
             {autoMode && (
               <div className="space-y-2">
-                <label className="text-sm font-medium text-gray-700">
+                <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
                   Nivel objetivo: {targetLevel}%
                 </label>
                 <input
@@ -272,12 +272,12 @@ const ValveDemo = () => {
 
             {/* Estadísticas */}
             <div className="grid grid-cols-2 gap-4 text-sm">
-              <div className="bg-gray-50 rounded-lg p-3">
-                <div className="font-semibold text-gray-700">Operaciones</div>
+              <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-3">
+                <div className="font-semibold text-gray-700 dark:text-gray-300">Operaciones</div>
                 <div className="text-lg font-bold text-blue-600">{operationCount}</div>
               </div>
-              <div className="bg-gray-50 rounded-lg p-3">
-                <div className="font-semibold text-gray-700">Consumo</div>
+              <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-3">
+                <div className="font-semibold text-gray-700 dark:text-gray-300">Consumo</div>
                 <div className="text-lg font-bold text-orange-600">{powerConsumption}W</div>
               </div>
             </div>
@@ -286,38 +286,38 @@ const ValveDemo = () => {
 
         {/* Información técnica */}
         <div className="space-y-6">
-          <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-lg p-4 border border-green-200">
-            <h4 className="font-semibold text-gray-800 mb-3 flex items-center">
+          <div className="bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-900/30 dark:to-emerald-900/30 rounded-lg p-4 border border-green-200 dark:border-green-700">
+            <h4 className="font-semibold text-gray-800 dark:text-gray-200 mb-3 flex items-center">
               <Zap className="w-5 h-5 text-green-600 mr-2" />
               📊 Datos de Operación
             </h4>
             <div className="space-y-3 text-sm">
               <div className="flex justify-between">
-                <span className="text-gray-600">Estado:</span>
+                <span className="text-gray-600 dark:text-gray-400">Estado:</span>
                 <span className={`font-semibold ${valveOpen ? 'text-green-600' : 'text-red-600'}`}>
                   {valveOpen ? 'Abierta' : 'Cerrada'}
                 </span>
               </div>
               <div className="flex justify-between">
-                <span className="text-gray-600">Flujo de agua:</span>
+                <span className="text-gray-600 dark:text-gray-400">Flujo de agua:</span>
                 <span className="font-semibold text-blue-600">{waterFlow.toFixed(1)} L/min</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-gray-600">Presión:</span>
-                <span className="font-semibold text-gray-800">{pressure.toFixed(1)} bar</span>
+                <span className="text-gray-600 dark:text-gray-400">Presión:</span>
+                <span className="font-semibold text-gray-800 dark:text-gray-200">{pressure.toFixed(1)} bar</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-gray-600">Consumo eléctrico:</span>
+                <span className="text-gray-600 dark:text-gray-400">Consumo eléctrico:</span>
                 <span className="font-semibold text-orange-600">{powerConsumption}W</span>
               </div>
             </div>
           </div>
 
-          <div className="bg-gradient-to-br from-blue-50 to-cyan-50 rounded-lg p-4 border border-blue-200">
-            <h4 className="font-semibold text-gray-800 mb-3 flex items-center">
+          <div className="bg-gradient-to-br from-blue-50 to-cyan-50 dark:from-blue-900/30 dark:to-cyan-900/30 rounded-lg p-4 border border-blue-200 dark:border-blue-700">
+            <h4 className="font-semibold text-gray-800 dark:text-gray-200 mb-3 flex items-center">
               🔧 Principio de Funcionamiento
             </h4>
-            <div className="space-y-2 text-sm text-gray-700">
+            <div className="space-y-2 text-sm text-gray-700 dark:text-gray-300">
               <div className="flex items-start">
                 <span className="w-2 h-2 bg-blue-500 rounded-full mt-2 mr-3 flex-shrink-0"></span>
                 <span><strong>Bobina:</strong> Al aplicar corriente se crea un campo magnético</span>
@@ -337,46 +337,46 @@ const ValveDemo = () => {
             </div>
           </div>
 
-          <div className="bg-gradient-to-br from-amber-50 to-orange-50 rounded-lg p-4 border border-amber-200">
-            <h4 className="font-semibold text-gray-800 mb-3 flex items-center">
+          <div className="bg-gradient-to-br from-amber-50 to-orange-50 dark:from-amber-900/30 dark:to-orange-900/30 rounded-lg p-4 border border-amber-200 dark:border-amber-700">
+            <h4 className="font-semibold text-gray-800 dark:text-gray-200 mb-3 flex items-center">
               ⚡ Especificaciones Técnicas
             </h4>
             <div className="grid grid-cols-2 gap-3 text-sm">
               <div>
-                <span className="font-medium text-gray-700">Voltaje:</span>
-                <p className="text-gray-600">12V DC</p>
+                <span className="font-medium text-gray-700 dark:text-gray-300">Voltaje:</span>
+                <p className="text-gray-600 dark:text-gray-400">12V DC</p>
               </div>
               <div>
-                <span className="font-medium text-gray-700">Corriente:</span>
-                <p className="text-gray-600">1A (12W)</p>
+                <span className="font-medium text-gray-700 dark:text-gray-300">Corriente:</span>
+                <p className="text-gray-600 dark:text-gray-400">1A (12W)</p>
               </div>
               <div>
-                <span className="font-medium text-gray-700">Presión:</span>
-                <p className="text-gray-600">0-10 bar</p>
+                <span className="font-medium text-gray-700 dark:text-gray-300">Presión:</span>
+                <p className="text-gray-600 dark:text-gray-400">0-10 bar</p>
               </div>
               <div>
-                <span className="font-medium text-gray-700">Caudal:</span>
-                <p className="text-gray-600">0-100 L/min</p>
+                <span className="font-medium text-gray-700 dark:text-gray-300">Caudal:</span>
+                <p className="text-gray-600 dark:text-gray-400">0-100 L/min</p>
               </div>
               <div>
-                <span className="font-medium text-gray-700">Tiempo respuesta:</span>
-                <p className="text-gray-600">&lt;1 seg</p>
+                <span className="font-medium text-gray-700 dark:text-gray-300">Tiempo respuesta:</span>
+                <p className="text-gray-600 dark:text-gray-400">&lt;1 seg</p>
               </div>
               <div>
-                <span className="font-medium text-gray-700">Conexión:</span>
-                <p className="text-gray-600">1/2" NPT</p>
+                <span className="font-medium text-gray-700 dark:text-gray-300">Conexión:</span>
+                <p className="text-gray-600 dark:text-gray-400">1/2" NPT</p>
               </div>
             </div>
           </div>
 
-          <div className="bg-gradient-to-br from-red-50 to-pink-50 rounded-lg p-4 border border-red-200">
-            <h4 className="font-semibold text-gray-800 mb-3 flex items-center">
+          <div className="bg-gradient-to-br from-red-50 to-pink-50 dark:from-red-900/30 dark:to-pink-900/30 rounded-lg p-4 border border-red-200 dark:border-red-700">
+            <h4 className="font-semibold text-gray-800 dark:text-gray-200 mb-3 flex items-center">
               ⚠️ Ventajas y Consideraciones
             </h4>
             <div className="space-y-2 text-sm">
               <div>
                 <span className="font-medium text-green-600">✓ Ventajas:</span>
-                <ul className="text-gray-700 ml-4 mt-1 space-y-1">
+                <ul className="text-gray-700 dark:text-gray-300 ml-4 mt-1 space-y-1">
                   <li>• Control preciso y rápido</li>
                   <li>• Funcionamiento silencioso</li>
                   <li>• Bajo mantenimiento</li>
@@ -385,7 +385,7 @@ const ValveDemo = () => {
               </div>
               <div>
                 <span className="font-medium text-orange-600">⚠ Consideraciones:</span>
-                <ul className="text-gray-700 ml-4 mt-1 space-y-1">
+                <ul className="text-gray-700 dark:text-gray-300 ml-4 mt-1 space-y-1">
                   <li>• Requiere fuente de alimentación</li>
                   <li>• Consumo eléctrico continuo</li>
                   <li>• Sensible a sobrepresión</li>

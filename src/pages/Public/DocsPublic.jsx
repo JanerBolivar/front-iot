@@ -29,7 +29,7 @@ export default function DocsPublic() {
           <h1 className="text-3xl font-bold leading-tight">
             Monitoreo de nivel de agua con ESP32
           </h1>
-        <p className="mt-3 text-gray-600">
+        <p className="mt-3 text-gray-600 dark:text-gray-400">
             Plataforma web para visualizar el nivel de un tanque, controlar una válvula solenoide y
             cargar firmware al ESP32 desde tu navegador.
           </p>
@@ -41,14 +41,14 @@ export default function DocsPublic() {
               {user ? "Ir al panel" : "Iniciar sesión"}
             </Link>
             {!user && (
-              <Link to="/register" className="rounded-md border px-4 py-2 text-sm hover:bg-gray-50">
+              <Link to="/register" className="rounded-md border border-gray-300 dark:border-gray-600 px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700">
                 Crear cuenta
               </Link>
             )}
           </div>
         </div>
 
-        <div className="rounded-2xl border bg-gradient-to-br from-blue-50 to-indigo-50 p-6 space-y-2 text-sm text-gray-700">
+        <div className="rounded-2xl border border-gray-200 dark:border-gray-700 bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/30 dark:to-indigo-900/30 p-6 space-y-2 text-sm text-gray-700 dark:text-gray-300">
           <p>• Visual: tanque animado, historial persistente y métricas del sistema.</p>
           <p>• Control: abrir/cerrar válvula, estado en tiempo real.</p>
           <p>• Configuración: Web Serial API para conectar con el ESP32.</p>
@@ -60,18 +60,18 @@ export default function DocsPublic() {
         {/* Índice pegajoso */}
         <aside className="hidden lg:block w-64 shrink-0">
           <nav className="sticky top-20 space-y-1">
-            <p className="mb-2 text-xs font-semibold uppercase text-gray-500">Índice</p>
+            <p className="mb-2 text-xs font-semibold uppercase text-gray-500 dark:text-gray-400">Índice</p>
             {SECTIONS.map((s) => (
               <a
                 key={s.id}
                 href={`#${s.id}`}
-                className="flex items-center gap-2 rounded-md px-2 py-1.5 text-sm text-gray-700 hover:bg-gray-100"
+                className="flex items-center gap-2 rounded-md px-2 py-1.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
               >
                 {s.icon}
                 <span>{s.title}</span>
               </a>
             ))}
-            <a href="#top" className="mt-2 block rounded-md px-2 py-1.5 text-xs text-gray-500 hover:bg-gray-100">
+            <a href="#top" className="mt-2 block rounded-md px-2 py-1.5 text-xs text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700">
               ↑ Volver arriba
             </a>
           </nav>
@@ -105,8 +105,8 @@ export default function DocsPublic() {
               </p>
 
               {/* Demostración Interactiva del Tanque */}
-              <div className="bg-white rounded-xl p-6 border shadow-sm">
-                <h3 className="text-xl font-semibold text-gray-800 mb-6 flex items-center">
+              <div className="bg-white dark:bg-gray-800 rounded-xl p-6 border border-gray-200 dark:border-gray-700 shadow-sm">
+                <h3 className="text-xl font-semibold text-gray-800 dark:text-gray-200 mb-6 flex items-center">
                   <Droplets className="w-6 h-6 text-cyan-600 mr-3" />
                   🎮 Demostración Interactiva - Tanque 500L
                 </h3>
@@ -129,44 +129,44 @@ export default function DocsPublic() {
 
                   {/* Información del tanque */}
                   <div className="space-y-6">
-                    <div className="bg-gradient-to-br from-blue-50 to-cyan-50 rounded-lg p-4 border border-blue-200">
-                      <h4 className="font-semibold text-gray-800 mb-3 flex items-center">
+                    <div className="bg-gradient-to-br from-blue-50 to-cyan-50 dark:from-blue-900/30 dark:to-cyan-900/30 rounded-lg p-4 border border-blue-200 dark:border-blue-700">
+                      <h4 className="font-semibold text-gray-800 dark:text-gray-200 mb-3 flex items-center">
                         <Droplets className="w-5 h-5 text-blue-600 mr-2" />
                         📊 Especificaciones Técnicas
                       </h4>
                       <div className="grid grid-cols-2 gap-3 text-sm">
                         <div>
-                          <span className="font-medium text-gray-700">Capacidad:</span>
-                          <p className="text-gray-600">500 Litros</p>
+                          <span className="font-medium text-gray-700 dark:text-gray-300">Capacidad:</span>
+                          <p className="text-gray-600 dark:text-gray-400">500 Litros</p>
                         </div>
                         <div>
-                          <span className="font-medium text-gray-700">Diámetro Inferior:</span>
-                          <p className="text-gray-600">0.65 m</p>
+                          <span className="font-medium text-gray-700 dark:text-gray-300">Diámetro Inferior:</span>
+                          <p className="text-gray-600 dark:text-gray-400">0.65 m</p>
                         </div>
                         <div>
-                          <span className="font-medium text-gray-700">Diámetro Superior:</span>
-                          <p className="text-gray-600">1.02 m</p>
+                          <span className="font-medium text-gray-700 dark:text-gray-300">Diámetro Superior:</span>
+                          <p className="text-gray-600 dark:text-gray-400">1.02 m</p>
                         </div>
                         <div>
-                          <span className="font-medium text-gray-700">Altura:</span>
-                          <p className="text-gray-600">1.15 m</p>
+                          <span className="font-medium text-gray-700 dark:text-gray-300">Altura:</span>
+                          <p className="text-gray-600 dark:text-gray-400">1.15 m</p>
                         </div>
                         <div>
-                          <span className="font-medium text-gray-700">Material:</span>
-                          <p className="text-gray-600">PEAD</p>
+                          <span className="font-medium text-gray-700 dark:text-gray-300">Material:</span>
+                          <p className="text-gray-600 dark:text-gray-400">PEAD</p>
                         </div>
                         <div>
-                          <span className="font-medium text-gray-700">Peso vacío:</span>
-                          <p className="text-gray-600">25 kg</p>
+                          <span className="font-medium text-gray-700 dark:text-gray-300">Peso vacío:</span>
+                          <p className="text-gray-600 dark:text-gray-400">25 kg</p>
                         </div>
                       </div>
                     </div>
 
-                    <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-lg p-4 border border-green-200">
-                      <h4 className="font-semibold text-gray-800 mb-3 flex items-center">
+                    <div className="bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-900/30 dark:to-emerald-900/30 rounded-lg p-4 border border-green-200 dark:border-green-700">
+                      <h4 className="font-semibold text-gray-800 dark:text-gray-200 mb-3 flex items-center">
                         🎨 Características de la Visualización
                       </h4>
-                      <ul className="space-y-2 text-sm text-gray-700">
+                      <ul className="space-y-2 text-sm text-gray-700 dark:text-gray-300">
                         <li className="flex items-start">
                           <span className="w-2 h-2 bg-green-500 rounded-full mt-2 mr-3 flex-shrink-0"></span>
                           <span><strong>Ondas Multi-capa:</strong> 5 capas de ondas con diferentes frecuencias</span>
@@ -189,65 +189,6 @@ export default function DocsPublic() {
                 </div>
               </div>
 
-              {/* Variantes del Tanque */}
-              <div className="bg-white rounded-xl p-6 border shadow-sm">
-                <h3 className="text-xl font-semibold text-gray-800 mb-6">
-                  🎨 Variantes del Tanque
-                </h3>
-                
-                <div className="grid md:grid-cols-3 gap-6">
-                  {/* Variante Rectangular */}
-                  <div className="text-center space-y-3">
-                    <TankViz
-                      level={75}
-                      capacityLiters={500}
-                      variant="rect"
-                      indicator="chip"
-                      valveOpen={true}
-                      valveSpin={false}
-                      showHeader={false}
-                      showPercent={true}
-                      className="mx-auto"
-                    />
-                    <h4 className="font-medium text-gray-800">Rectangular</h4>
-                    <p className="text-sm text-gray-600">Forma estándar con bordes redondeados</p>
-                  </div>
-
-                  {/* Variante Drum */}
-                  <div className="text-center space-y-3">
-                    <TankViz
-                      level={45}
-                      capacityLiters={500}
-                      variant="drum"
-                      indicator="chip"
-                      valveOpen={false}
-                      valveSpin={false}
-                      showHeader={false}
-                      showPercent={true}
-                      className="mx-auto"
-                    />
-                    <h4 className="font-medium text-gray-800">Tambor</h4>
-                    <p className="text-sm text-gray-600">Diseño más robusto y cilíndrico</p>
-                  </div>
-
-                  {/* Variante Cylinder */}
-                  <div className="text-center space-y-3">
-                    <TankViz
-                      level={85}
-                      capacityLiters={500}
-                      variant="cyl"
-                      indicator="chip"
-                      valveOpen={true}
-                      valveSpin={true}
-                      showHeader={false}
-                      showPercent={true}
-                      className="mx-auto"
-                    />
-                    <h4 className="font-medium text-gray-800">Cilíndrico</h4>
-                    <p className="text-sm text-gray-600">Forma completamente cilíndrica</p>
-                  </div>
-                </div>
-              </div>
             </div>
           </DocSection>
 
@@ -298,7 +239,7 @@ export default function DocsPublic() {
               <em> system.id</em> en localStorage.
             </p>
             <div className="mt-3 text-sm">
-              <Link to={user ? "/app/devices" : "/login"} className="text-blue-600 hover:underline">
+              <Link to={user ? "/app/devices" : "/login"} className="text-blue-600 dark:text-blue-400 hover:underline">
                 Ver dispositivos
               </Link>
             </div>
@@ -312,8 +253,8 @@ export default function DocsPublic() {
 function DocSection({ id, title, children }) {
   return (
     <section id={id} className="scroll-mt-24">
-      <h2 className="mb-3 text-xl font-semibold">{title}</h2>
-      <div className="prose prose-sm max-w-none text-gray-700">{children}</div>
+      <h2 className="mb-3 text-xl font-semibold text-gray-900 dark:text-gray-100">{title}</h2>
+      <div className="prose prose-sm max-w-none text-gray-700 dark:text-gray-300">{children}</div>
     </section>
   );
 }

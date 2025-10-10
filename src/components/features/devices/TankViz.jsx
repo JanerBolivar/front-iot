@@ -1,5 +1,5 @@
 // src/components/DevicesSection/TankViz.jsx
-import React, { useId, useMemo } from "react";
+import React, { useMemo } from "react";
 import RealisticValve from "./RealisticValve";
 
 /**
@@ -25,7 +25,7 @@ export default function TankViz({
   showPercent = true,
   className = "",
 }) {
-  const rid = typeof useId === "function" ? useId() : `id-${Math.random().toString(36).slice(2)}`;
+  const rid = `tank-${Math.random().toString(36).slice(2)}`;
   const clipId = `${rid}-clip`;
   const gradId = `${rid}-grad`;
 
@@ -35,28 +35,20 @@ export default function TankViz({
 
   const shape = useMemo(() => {
     switch (variant) {
-      case "drum": {
-        const x = 50, y = 30, w = 220, h = 160, r = 25;
+      case "square": {
+        const x = 60, y = 35, w = 200, h = 200;
         return {
           content: { x, y, w, h },
-          clipPath: <path d={roundedRectPath(x, y, w, h, r)} />,
-          outline: <path d={roundedRectPath(x, y, w, h, r)} stroke="#0f172a" strokeWidth="3" fill="none" />,
+          clipPath: <rect x={x} y={y} width={w} height={h} />,
+          outline: <rect x={x} y={y} width={w} height={h} stroke="currentColor" strokeWidth="3" fill="none" className="text-gray-700 dark:text-gray-300" />,
         };
       }
-      case "cyl": {
-        const x = 40, y = 50, w = 240, h = 120, r = 60;
-        return {
-          content: { x, y, w, h },
-          clipPath: <path d={roundedRectPath(x, y, w, h, r)} />,
-          outline: <path d={roundedRectPath(x, y, w, h, r)} stroke="#0f172a" strokeWidth="3" fill="none" />,
-        };
-      }
-      default: {
+      default: { // "rect" - Rectangular
         const x = 40, y = 25, w = 240, h = 170;
         return {
           content: { x, y, w, h },
-          clipPath: <rect x={x} y={y} width={w} height={h} rx="10" />,
-          outline: <rect x={x} y={y} width={w} height={h} rx="10" stroke="#0f172a" strokeWidth="3" fill="none" />,
+          clipPath: <rect x={x} y={y} width={w} height={h} />,
+          outline: <rect x={x} y={y} width={w} height={h} stroke="currentColor" strokeWidth="3" fill="none" className="text-gray-700 dark:text-gray-300" />,
         };
       }
     }
@@ -67,10 +59,10 @@ export default function TankViz({
     return (level / 100) * h;
   }, [level, shape.content]);
 
-  const valveColor = valveOpen ? "#22c55e" : "#ef4444";
+  // const valveColor = valveOpen ? "#22c55e" : "#ef4444"; // No se usa actualmente
 
   return (
-    <div className={`rounded-2xl border bg-white p-4 shadow-sm ${className}`}>
+    <div className={`rounded-2xl border bg-white dark:bg-gray-800 p-4 shadow-sm ${className}`}>
       {/* Estilos mejorados con animaciones fluidas */}
       <style>{`
         .valve-wiggle {
@@ -247,9 +239,9 @@ export default function TankViz({
       `}</style>
 
       <div className="text-center mb-2">
-        {showHeader && <h3 className="text-lg font-semibold">Tanque {capacityLiters}L</h3>}
+        {showHeader && <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Tanque {capacityLiters}L</h3>}
         {showPercent && (
-          <div className="text-sm text-gray-600">
+          <div className="text-sm text-gray-600 dark:text-gray-400">
             {level}% ({Math.round((level / 100) * capacityLiters)}L)
           </div>
         )}
@@ -289,8 +281,8 @@ export default function TankViz({
             </clipPath>
           </defs>
 
-          {/* Fondo del tanque */}
-          <rect x={shape.content.x} y={shape.content.y} width={shape.content.w} height={shape.content.h} fill="#f8fafc" rx="8" />
+          {/* Fondo del tanque - adaptado para modo oscuro */}
+          <rect x={shape.content.x} y={shape.content.y} width={shape.content.w} height={shape.content.h} fill="currentColor" fillOpacity="0.05" className="text-gray-900 dark:text-gray-100" />
           
           {/* Agua con múltiples capas */}
           <g clipPath={`url(#${clipId})`}>

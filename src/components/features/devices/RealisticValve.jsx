@@ -436,7 +436,7 @@ export default function RealisticValve({
           </div>
 
           {/* Indicadores de flujo */}
-          <div className="flex justify-between items-center mt-8 text-sm">
+          <div className="flex justify-between items-center mt-6 mb-4 text-sm">
             <div className={`flex items-center gap-2 ${currentIsOpen ? 'text-green-400' : 'text-slate-500'}`}>
               <div className={`w-3 h-3 rounded-full ${currentIsOpen ? 'bg-green-400 animate-pulse' : 'bg-slate-600'}`}></div>
               <span>Entrada</span>
@@ -444,6 +444,17 @@ export default function RealisticValve({
             <div className={`flex items-center gap-2 ${currentIsOpen ? 'text-green-400' : 'text-slate-500'}`}>
               <span>Salida</span>
               <div className={`w-3 h-3 rounded-full ${currentIsOpen ? 'bg-green-400 animate-pulse' : 'bg-slate-600'}`}></div>
+            </div>
+          </div>
+
+          {/* Estado de la válvula */}
+          <div className="flex justify-center">
+            <div className={`px-4 py-2 rounded-lg text-sm font-medium ${
+              currentIsOpen 
+                ? 'bg-green-500/20 text-green-400 border border-green-500/30' 
+                : 'bg-red-500/20 text-red-400 border border-red-500/30'
+            }`}>
+              {currentIsOpen ? 'Abierto' : 'Cerrado'}
             </div>
           </div>
         </div>

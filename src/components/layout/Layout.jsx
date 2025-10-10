@@ -9,17 +9,17 @@ export default function MainLayout() {
   const [mobileOpen, setMobileOpen] = useState(false);
 
   return (
-    <div className="flex h-screen bg-gray-50">
+    <div className="flex h-screen bg-gray-50 dark:bg-gray-900">
       {/* Sidebar (off-canvas en móvil) */}
       <Sidebar mobileOpen={mobileOpen} setMobileOpen={setMobileOpen} className="shrink-0" />
 
       {/* Columna derecha */}
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* TOPBAR */}
-        <header className="h-14 border-b bg-white flex items-center justify-between px-4 sticky top-0 z-20">
+        <header className="h-14 border-b bg-white dark:bg-gray-800 dark:border-gray-700 flex items-center justify-between px-4 sticky top-0 z-20">
           {/* botón hamburguesa solo en móvil */}
           <button
-            className="md:hidden inline-flex items-center gap-2 rounded-md border px-2 py-1.5 hover:bg-gray-50"
+            className="md:hidden inline-flex items-center gap-2 rounded-md border border-gray-300 dark:border-gray-600 px-2 py-1.5 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300"
             onClick={() => setMobileOpen(true)}
             aria-label="Abrir menú"
           >

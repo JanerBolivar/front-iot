@@ -1,19 +1,31 @@
 import React, { useEffect, useMemo, useState } from "react";
 import {
-  Radar, RefreshCw, Plus, MapPin, Wifi, Power, Clock,
-  Droplets, Activity, Settings, Wrench, Download
+  Radar, RefreshCw, Plus, MapPin, Power, Clock,
+  Droplets, Activity, Settings, Wrench, Download, Edit3
 } from "lucide-react";
 import FirmwareModal from "@/components/features/devices/FirmwareModal";
 import SystemDetailsModal from "@/components/features/devices/SystemDetailsModal";
 import AddDeviceModal from "@/components/features/devices/AddDeviceModal";
-const LS_KEY = "gd_systems";
+import EditDeviceModal from "@/components/features/devices/EditDeviceModal";
+import { useAuth } from "@/context/AuthContext";
 
-const loadSystems = () => {
-  try { return JSON.parse(localStorage.getItem(LS_KEY) || "[]"); }
+// Clave dinámica basada en el usuario actual
+const getLSKey = (userId) => `gd_systems_${userId}`;
+
+const loadSystems = (userId) => {
+  try { 
+    const key = getLSKey(userId);
+    return JSON.parse(localStorage.getItem(key) || "[]"); 
+  }
   catch { return []; }
 };
-const saveSystems = (arr) => {
-  try { localStorage.setItem(LS_KEY, JSON.stringify(arr)); } catch {}
+const saveSystems = (arr, userId) => {
+  try { 
+    const key = getLSKey(userId);
+    localStorage.setItem(key, JSON.stringify(arr)); 
+  } catch (error) {
+    console.warn('Error saving systems to localStorage:', error);
+  }
 };
 
 // Función para exportar historial de telemetría a CSV
@@ -39,7 +51,7 @@ const exportTelemetryCSV = (system) => {
         waterLevel: waterLevel.toFixed(2),
         temperature: temperature.toFixed(2),
         valveStatus,
-        signal: Math.floor(85 + Math.random() * 15)
+        // signal: Math.floor(85 + Math.random() * 15) // Eliminado según solicitud
       });
     }
     
@@ -47,15 +59,14 @@ const exportTelemetryCSV = (system) => {
   }
   
   // Crear CSV
-  const headers = ['Timestamp', 'Water Level (%)', 'Temperature (°C)', 'Valve Status', 'Signal (%)'];
+  const headers = ['Timestamp', 'Water Level (%)', 'Temperature (°C)', 'Valve Status'];
   const csvContent = [
     headers.join(','),
     ...telemetryData.map(row => [
       row.timestamp,
       row.waterLevel,
       row.temperature,
-      row.valveStatus,
-      row.signal
+      row.valveStatus
     ].join(','))
   ].join('\n');
   
@@ -72,10 +83,10 @@ const exportTelemetryCSV = (system) => {
 };
 
 // MIGRACIÓN: junta los 3 dispositivos sueltos (gd_devices) en 1 sistema con controller (ESP32)
-const migrateLegacyIfNeeded = () => {
+const migrateLegacyIfNeeded = (userId) => {
   try {
     const legacy = JSON.parse(localStorage.getItem("gd_devices") || "[]");
-    const current = loadSystems();
+    const current = loadSystems(userId);
     if (current.length || !Array.isArray(legacy) || legacy.length === 0) return;
 
     const modules = [];
@@ -118,15 +129,17 @@ const migrateLegacyIfNeeded = () => {
       modules,
     };
 
-    saveSystems([system]);
+    saveSystems([system], userId);
     // Opcional: limpiar lo viejo
     // localStorage.removeItem("gd_devices");
-  } catch {}
+  } catch (error) {
+    console.warn('Error during legacy migration:', error);
+  }
 };
 
 // SEED de demo si no hay nada
-const seedIfEmpty = () => {
-  const cur = loadSystems();
+const seedIfEmpty = (userId) => {
+  const cur = loadSystems(userId);
   if (cur.length) return cur;
 
   const demo = [{
@@ -158,7 +171,7 @@ const seedIfEmpty = () => {
     ],
   }];
 
-  saveSystems(demo);
+  saveSystems(demo, userId);
   return demo;
 };
 
@@ -181,7 +194,7 @@ const ModuleChip = ({ m }) => {
     m.key === "sensor" ? Activity :
     Settings;
   const color =
-    m.status === "online" ? "bg-green-100 text-green-700" : "bg-rose-100 text-rose-700";
+    m.status === "online" ? "bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300" : "bg-rose-100 dark:bg-rose-900/30 text-rose-700 dark:text-rose-300";
   return (
     <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs ${color}`}>
       <Icon className="h-3.5 w-3.5" />
@@ -191,25 +204,33 @@ const ModuleChip = ({ m }) => {
 };
 
 export default function DevicesSection() {
+  const { user } = useAuth();
   const [systems, setSystems] = useState([]);
   const [openFw, setOpenFw] = useState(false);
   const [currentSystem, setCurrentSystem] = useState(null);
   const [openDetails, setOpenDetails] = useState(false);
   const [openAddDevice, setOpenAddDevice] = useState(false);
+  const [openEditDevice, setOpenEditDevice] = useState(false);
+  const [editingDevice, setEditingDevice] = useState(null);
   const [refreshing, setRefreshing] = useState(false);
 
   useEffect(() => {
-    migrateLegacyIfNeeded();
-    setSystems(seedIfEmpty());
-  }, []);
+    if (!user?.id) return;
+    
+    migrateLegacyIfNeeded(user.id);
+    setSystems(seedIfEmpty(user.id));
+  }, [user?.id]);
 
   useEffect(() => {
-  const onStorage = (e) => {
-    if (e.key === LS_KEY) setSystems(loadSystems());
-  };
-  window.addEventListener("storage", onStorage);
-  return () => window.removeEventListener("storage", onStorage);
-}, []);
+    if (!user?.id) return;
+    
+    const userLSKey = getLSKey(user.id);
+    const onStorage = (e) => {
+      if (e.key === userLSKey) setSystems(loadSystems(user.id));
+    };
+    window.addEventListener("storage", onStorage);
+    return () => window.removeEventListener("storage", onStorage);
+  }, [user?.id]);
 
   // MÉTRICAS desde controller
   const metrics = useMemo(() => {
@@ -220,37 +241,19 @@ export default function DevicesSection() {
   }, [systems]);
 
   const refresh = () => {
-  setRefreshing(true);
-  setSystems(loadSystems());
-  setTimeout(() => setRefreshing(false), 500);
-};
-
-  const addSystem = () => {
-    const next = [
-      ...systems,
-      {
-        id: "sys-" + Math.random().toString(36).slice(2, 8),
-        name: `Sistema de Agua #${systems.length + 1}`,
-        location: "Planta piloto",
-        createdAt: new Date().toISOString(),
-        controller: {
-          status: "online",
-          signal: 80,
-          lastSeen: new Date().toISOString(),
-        },
-        modules: [
-          { key: "nivel", name: "Tanque 500L", status: "online", signal: 90, location: "Bloque A", lastSeen: new Date().toISOString() },
-          { key: "sensor", name: "Sensor HC-SR04", status: "online", signal: 88, location: "Bloque A", lastSeen: new Date().toISOString() },
-          { key: "actuador", name: "Válvula Solenoide", status: "online", signal: 86, location: "Bloque A", lastSeen: new Date().toISOString() },
-        ],
-      }
-    ];
-    saveSystems(next);
-    setSystems(next);
+    if (!user?.id) return;
+    
+    setRefreshing(true);
+    setSystems(loadSystems(user.id));
+    setTimeout(() => setRefreshing(false), 500);
   };
+
+  // Función addSystem removida - no se usa actualmente
 
   // Función para manejar el guardado de nuevos dispositivos
   const handleSaveDevice = (deviceData) => {
+    if (!user?.id) return;
+    
     const newSystem = {
       id: `sys-${Date.now()}`,
       name: deviceData.name,
@@ -298,27 +301,77 @@ export default function DevicesSection() {
           lastSeen: new Date().toISOString() 
         },
       ],
-      createdAt: deviceData.createdAt,
+      createdAt: new Date().toISOString(),
       status: deviceData.status,
       lastMaintenance: deviceData.lastMaintenance,
       nextMaintenance: deviceData.nextMaintenance
     };
 
     const updatedSystems = [...systems, newSystem];
-    saveSystems(updatedSystems);
+    saveSystems(updatedSystems, user.id);
     setSystems(updatedSystems);
   };
+
+  const handleUpdateDevice = (deviceData) => {
+    if (!user?.id || !editingDevice) return;
+    
+    const updatedSystems = systems.map(sys => 
+      sys.id === editingDevice.id 
+        ? {
+            ...sys,
+            name: deviceData.name,
+            type: deviceData.type,
+            specs: deviceData.specs,
+            location: deviceData.location,
+            building: deviceData.building,
+            floor: deviceData.floor,
+            room: deviceData.room,
+            description: deviceData.description,
+            maintenanceInterval: deviceData.maintenanceInterval,
+            status: deviceData.status,
+            updatedAt: new Date().toISOString(),
+            // Mantener la fecha de creación original si existe
+            createdAt: sys.createdAt || new Date().toISOString()
+          }
+        : sys
+    );
+    
+    saveSystems(updatedSystems, user.id);
+    setSystems(updatedSystems);
+    setEditingDevice(null);
+    setOpenEditDevice(false);
+  };
+
+  const handleEditDevice = (device) => {
+    setEditingDevice(device);
+    setOpenEditDevice(true);
+  };
+
+  // Si no hay usuario autenticado, mostrar mensaje
+  if (!user?.id) {
+    return (
+      <div className="max-w-6xl mx-auto">
+        <div className="rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-10 text-center">
+          <div className="mx-auto mb-4 grid h-14 w-14 place-items-center rounded-full bg-gray-100 dark:bg-gray-700">
+            <Radar className="h-7 w-7 text-gray-500 dark:text-gray-400" />
+          </div>
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Cargando dispositivos...</h2>
+          <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">Esperando autenticación del usuario.</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-6xl mx-auto">
       {/* Título + acciones */}
       <div className="mb-6 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-        <h1 className="text-xl font-bold">Dispositivos</h1>
+        <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100">Dispositivos</h1>
         <div className="flex items-center gap-2">
           <button
             onClick={refresh}
             disabled={refreshing}
-            className="inline-flex items-center gap-2 rounded-md border px-3 py-2 text-sm hover:bg-gray-50 disabled:opacity-60">
+            className="inline-flex items-center gap-2 rounded-md border border-gray-300 dark:border-gray-600 px-3 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-60">
             <RefreshCw className={`h-4 w-4 ${refreshing ? "animate-spin" : ""}`} />
             {refreshing ? "Actualizando…" : "Refrescar"}
           </button>
@@ -330,29 +383,29 @@ export default function DevicesSection() {
 
       {/* Métricas */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
-        <div className="rounded-xl border bg-white p-4">
-          <p className="text-xs text-gray-500">Total</p>
-          <p className="mt-1 text-2xl font-semibold">{metrics.total}</p>
+        <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-4">
+          <p className="text-xs text-gray-500 dark:text-gray-400">Total</p>
+          <p className="mt-1 text-2xl font-semibold text-gray-900 dark:text-gray-100">{metrics.total}</p>
         </div>
-        <div className="rounded-xl border bg-white p-4">
-          <p className="text-xs text-gray-500">En línea</p>
+        <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-4">
+          <p className="text-xs text-gray-500 dark:text-gray-400">En línea</p>
           <p className="mt-1 text-2xl font-semibold text-green-600">{metrics.online}</p>
         </div>
-        <div className="rounded-xl border bg-white p-4">
-          <p className="text-xs text-gray-500">Fuera de línea</p>
+        <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-4">
+          <p className="text-xs text-gray-500 dark:text-gray-400">Fuera de línea</p>
           <p className="mt-1 text-2xl font-semibold text-rose-600">{metrics.offline}</p>
         </div>
       </div>
 
       {/* Vacío */}
       {systems.length === 0 ? (
-        <div className="rounded-2xl border bg-white p-10 text-center">
-          <div className="mx-auto mb-4 grid h-14 w-14 place-items-center rounded-full bg-gray-100">
-            <Radar className="h-7 w-7 text-gray-500" />
+        <div className="rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-10 text-center">
+          <div className="mx-auto mb-4 grid h-14 w-14 place-items-center rounded-full bg-gray-100 dark:bg-gray-700">
+            <Radar className="h-7 w-7 text-gray-500 dark:text-gray-400" />
           </div>
-          <h2 className="text-lg font-semibold text-gray-900">Sin sistemas</h2>
-          <p className="mt-1 text-sm text-gray-600">Cuando conectes tu ESP32 aparecerá aquí.</p>
-          <button onClick={refresh} className="mt-5 rounded-md border px-3 py-2 text-sm hover:bg-gray-50">
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Sin sistemas</h2>
+          <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">Cuando conectes tu ESP32 aparecerá aquí.</p>
+          <button onClick={refresh} className="mt-5 rounded-md border border-gray-300 dark:border-gray-600 px-3 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700">
             Volver a intentar
           </button>
         </div>
@@ -362,19 +415,18 @@ export default function DevicesSection() {
             const online = sys.controller?.status === "online";
             const statusClass = online ? "bg-green-100 text-green-700" : "bg-rose-100 text-rose-700";
             const statusLabel = online ? "En línea" : "Fuera de línea";
-            const refSignal = sys.controller?.signal ?? 0;
             const lastSeen = sys.controller?.lastSeen || sys.modules[0]?.lastSeen;
 
             return (
-              <article key={sys.id} className="rounded-2xl border bg-white p-4 shadow-sm hover:shadow-md transition-shadow">
+              <article key={sys.id} className="rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-4 shadow-sm hover:shadow-md transition-shadow">
                 <div className="flex items-start justify-between gap-2">
                   <div className="flex items-center gap-3">
-                    <div className="grid h-10 w-10 place-items-center rounded-xl bg-blue-50">
+                    <div className="grid h-10 w-10 place-items-center rounded-xl bg-blue-50 dark:bg-blue-900/30">
                       <Radar className="h-5 w-5 text-blue-600" />
                     </div>
                     <div>
-                      <h3 className="font-semibold text-gray-900">{sys.name}</h3>
-                      <p className="text-xs text-gray-500">{sys.location}</p>
+                      <h3 className="font-semibold text-gray-900 dark:text-gray-100">{sys.name}</h3>
+                      <p className="text-xs text-gray-500 dark:text-gray-400">{sys.location}</p>
                     </div>
                   </div>
                   <span className={`rounded-full px-2 py-0.5 text-xs ${statusClass}`}>
@@ -389,17 +441,14 @@ export default function DevicesSection() {
 
                 {/* Info rápida (desde controller) */}
                 <div className="mt-4 grid grid-cols-2 gap-3 text-sm">
-                  <div className="flex items-center gap-2 text-gray-700">
-                    <MapPin className="h-4 w-4 text-gray-400" /> <span className="truncate" title={sys.location}>{sys.location}</span>
+                  <div className="flex items-center gap-2 text-gray-700 dark:text-gray-300">
+                    <MapPin className="h-4 w-4 text-gray-400 dark:text-gray-500" /> <span className="truncate" title={sys.location}>{sys.location}</span>
                   </div>
-                  <div className="flex items-center gap-2 text-gray-700">
-                    <Wifi className="h-4 w-4 text-gray-400" /> Señal: {refSignal}%
+                  <div className="flex items-center gap-2 text-gray-700 dark:text-gray-300">
+                    <Clock className="h-4 w-4 text-gray-400 dark:text-gray-500" /> Actualizado: {timeAgo(lastSeen)}
                   </div>
-                  <div className="flex items-center gap-2 text-gray-700">
-                    <Clock className="h-4 w-4 text-gray-400" /> Actualizado: {timeAgo(lastSeen)}
-                  </div>
-                  <div className="flex items-center gap-2 text-gray-700">
-                    <Power className="h-4 w-4 text-gray-400" /> ID: <span className="font-mono text-xs">{sys.id}</span>
+                  <div className="flex items-center gap-2 text-gray-700 dark:text-gray-300">
+                    <Power className="h-4 w-4 text-gray-400 dark:text-gray-500" /> ID: <span className="font-mono text-xs">{sys.id}</span>
                   </div>
                 </div>
 
@@ -409,9 +458,9 @@ export default function DevicesSection() {
                       primary:
                         "inline-flex items-center gap-2 rounded-md bg-indigo-600 px-3 py-1.5 text-xs text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-300",
                       outline:
-                        "inline-flex items-center gap-2 rounded-md border px-3 py-1.5 text-xs text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-200",
+                        "inline-flex items-center gap-2 rounded-md border border-gray-300 dark:border-gray-600 px-3 py-1.5 text-xs text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-200 dark:focus:ring-gray-600",
                       danger:
-                        "inline-flex items-center gap-2 rounded-md border border-red-200 px-3 py-1.5 text-xs text-red-600 hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-red-200",
+                        "inline-flex items-center gap-2 rounded-md border border-red-200 dark:border-red-700 px-3 py-1.5 text-xs text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30 focus:outline-none focus:ring-2 focus:ring-red-200 dark:focus:ring-red-700",
                     };
 
                     return (
@@ -424,6 +473,15 @@ export default function DevicesSection() {
                           }}
                         >
                           Ver detalles
+                        </button>
+
+                        <button
+                          className={btn.outline}
+                          onClick={() => handleEditDevice(sys)}
+                          title="Editar información del dispositivo"
+                        >
+                          <Edit3 className="h-3 w-3" />
+                          Editar
                         </button>
 
                         <button
@@ -448,8 +506,9 @@ export default function DevicesSection() {
                         <button
                           className={btn.danger}
                           onClick={() => {
+                            if (!user?.id) return;
                             const next = systems.filter((x) => x.id !== sys.id);
-                            saveSystems(next);
+                            saveSystems(next, user.id);
                             setSystems(next);
                           }}
                         >
@@ -481,6 +540,16 @@ export default function DevicesSection() {
         isOpen={openAddDevice}
         onClose={() => setOpenAddDevice(false)}
         onSave={handleSaveDevice}
+      />
+
+      <EditDeviceModal
+        isOpen={openEditDevice}
+        onClose={() => {
+          setOpenEditDevice(false);
+          setEditingDevice(null);
+        }}
+        onSave={handleUpdateDevice}
+        device={editingDevice}
       />
     </div>
   );

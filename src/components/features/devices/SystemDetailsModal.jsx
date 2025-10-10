@@ -32,7 +32,9 @@ function saveHistoryFor(systemId, rows) {
       ts: r.ts instanceof Date ? r.ts.toISOString() : r.ts, // Date -> ISO
     }));
     localStorage.setItem(HIST_KEY, JSON.stringify(map));
-  } catch {}
+  } catch (error) {
+    console.warn('Error saving history to localStorage:', error);
+  }
 }
 
 // Icono por módulo
@@ -63,15 +65,15 @@ export default function SystemDetailsModal({ open, onClose, system }) {
 
   // Tendencia y estado de válvula - con validación
   const last = rows.at(-1) || {};
-  const prev = rows.at(-2) || null;
+  // const prev = rows.at(-2) || null; // No se usa actualmente
   const valveOpen = String(last.valvula || "").toLowerCase() === "abierta";
-  const trend = prev
-    ? last.nivel > prev.nivel
-      ? "up"
-      : last.nivel < prev.nivel
-      ? "down"
-      : "steady"
-    : "steady";
+  // const trend = prev
+  //   ? last.nivel > prev.nivel
+  //     ? "up"
+  //     : last.nivel < prev.nivel
+  //     ? "down"
+  //     : "steady"
+  //   : "steady"; // No se usa actualmente
 
   // Semilla
   const seedRows = useMemo(() => {
@@ -83,7 +85,7 @@ export default function SystemDetailsModal({ open, onClose, system }) {
         nivel: Math.max(0, Math.min(100, 50 + Math.round(Math.sin(i / 3) * 15) + (i % 7))),
         sensor: Math.max(0, Math.round(35 + Math.cos(i / 2) * 3 + (i % 5) * 0.3)), // cm
         valvula: i % 2 === 0 ? "Abierta" : "Cerrada",
-        signal: Math.max(50, 90 - (i % 9) * 2),
+        // signal: Math.max(50, 90 - (i % 9) * 2), // Eliminado según solicitud
         note: "—",
       });
     }
@@ -153,7 +155,7 @@ export default function SystemDetailsModal({ open, onClose, system }) {
           nivel: Math.max(0, Math.min(100, (prev.at(-1)?.nivel ?? 60) + (Math.random() * 6 - 3))),
           sensor: Math.max(0, (prev.at(-1)?.sensor ?? 35) + (Math.random() * 1.5 - 0.7)),
           valvula: Math.random() > 0.5 ? "Abierta" : "Cerrada",
-          signal: Math.max(40, Math.min(100, (prev.at(-1)?.signal ?? 80) + (Math.random() * 10 - 5))),
+          // signal: Math.max(40, Math.min(100, (prev.at(-1)?.signal ?? 80) + (Math.random() * 10 - 5))), // Eliminado según solicitud
           note: "—",
         },
       ];
@@ -194,7 +196,7 @@ export default function SystemDetailsModal({ open, onClose, system }) {
               nivel: nextLevel,
               sensor: Math.max(0, (current.sensor ?? 35) + (Math.random() * 1.2 - 0.6)),
               valvula: "Abierta",
-              signal: Math.max(40, Math.min(100, (current.signal ?? 80) + (Math.random() * 6 - 3))),
+              // signal: Math.max(40, Math.min(100, (current.signal ?? 80) + (Math.random() * 6 - 3))), // Eliminado según solicitud
               note: "Llenando...",
             },
           ];
@@ -226,7 +228,7 @@ export default function SystemDetailsModal({ open, onClose, system }) {
           nivel: prevLevel,
           sensor: Math.max(0, (last.sensor ?? 35) + (Math.random() * 1.2 - 0.6)),
           valvula: willOpen ? "Abierta" : "Cerrada",
-          signal: Math.max(40, Math.min(100, (last.signal ?? 80) + (Math.random() * 6 - 3))),
+          // signal: Math.max(40, Math.min(100, (last.signal ?? 80) + (Math.random() * 6 - 3))), // Eliminado según solicitud
           note: willOpen ? "Iniciando llenado..." : "Válvula cerrada",
         },
       ];
@@ -248,7 +250,7 @@ export default function SystemDetailsModal({ open, onClose, system }) {
         if (e.target === e.currentTarget) onClose?.();
       }}
     >
-      <div className="w-full max-w-6xl overflow-hidden rounded-2xl bg-white shadow-xl">
+      <div className="w-full max-w-6xl overflow-hidden rounded-2xl bg-white dark:bg-gray-800 shadow-xl">
         <div className="grid max-h-[85vh] grid-rows-[auto_1fr_auto]">
           {/* Header */}
           <div className="flex items-center justify-between border-b p-4">
@@ -289,10 +291,6 @@ export default function SystemDetailsModal({ open, onClose, system }) {
                       <span className="font-medium">{system.location}</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-gray-600">Señal:</span>
-                      <span className="font-medium">{system.controller?.signal ?? 0}%</span>
-                    </div>
-                    <div className="flex justify-between">
                       <span className="text-gray-600">Estado:</span>
                       <span className={`font-medium ${statusOk ? 'text-green-600' : 'text-red-600'}`}>
                         {statusOk ? 'En línea' : 'Fuera de línea'}
@@ -322,7 +320,7 @@ export default function SystemDetailsModal({ open, onClose, system }) {
                         <div
                           key={`${m.key}-${idx}`}
                           className={`inline-flex items-center gap-1 rounded-full px-2 py-1 text-xs ${chip}`}
-                          title={`${m.name} • Señal ${m.signal ?? 0}%`}
+                          title={`${m.name}`}
                         >
                           <Icon className="h-3 w-3" />
                           <span className="font-medium">{m.name}</span>
@@ -377,8 +375,8 @@ export default function SystemDetailsModal({ open, onClose, system }) {
               <div className="grid gap-6 lg:grid-cols-3">
                 {/* Tanque */}
                 <div className="lg:col-span-2">
-                  <div className="bg-gradient-to-br from-blue-50 to-cyan-50 rounded-xl p-6 border border-blue-200">
-                    <h5 className="text-lg font-semibold text-gray-700 mb-4 flex items-center">
+                  <div className="bg-gradient-to-br from-blue-50 to-cyan-50 dark:from-blue-900/30 dark:to-cyan-900/30 rounded-xl p-6 border border-blue-200 dark:border-blue-700">
+                    <h5 className="text-lg font-semibold text-gray-700 dark:text-gray-300 mb-4 flex items-center">
                       <Droplets className="w-5 h-5 text-blue-600 mr-2" />
                       Tanque de Agua (500L)
                     </h5>
@@ -395,8 +393,8 @@ export default function SystemDetailsModal({ open, onClose, system }) {
                     />
                     
                     {/* Selector de variantes del tanque */}
-                    <div className="bg-white/70 rounded-lg p-4 mt-4">
-                      <label className="text-sm font-medium text-gray-700 mb-3 block">
+                    <div className="bg-white/70 dark:bg-gray-700/70 rounded-lg p-4 mt-4">
+                      <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3 block">
                         Variante del tanque:
                       </label>
                       <div className="flex gap-2">
@@ -411,24 +409,14 @@ export default function SystemDetailsModal({ open, onClose, system }) {
                           Rectangular
                         </button>
                         <button
-                          onClick={() => setTankVariant("drum")}
+                          onClick={() => setTankVariant("square")}
                           className={`px-4 py-2 text-sm rounded-lg transition-colors ${
-                            tankVariant === "drum"
+                            tankVariant === "square"
                               ? 'bg-blue-500 text-white shadow-md'
                               : 'bg-white text-gray-700 hover:bg-blue-50 border border-gray-300'
                           }`}
                         >
-                          Tambor
-                        </button>
-                        <button
-                          onClick={() => setTankVariant("cyl")}
-                          className={`px-4 py-2 text-sm rounded-lg transition-colors ${
-                            tankVariant === "cyl"
-                              ? 'bg-blue-500 text-white shadow-md'
-                              : 'bg-white text-gray-700 hover:bg-blue-50 border border-gray-300'
-                          }`}
-                        >
-                          Cilíndrico
+                          Cuadrado
                         </button>
                       </div>
                     </div>
@@ -470,7 +458,7 @@ export default function SystemDetailsModal({ open, onClose, system }) {
                     </h5>
                     <div className="space-y-4">
                       {/* Válvula con animación de giro */}
-                      <div className="relative mx-auto" style={{ width: '120px', height: '120px' }}>
+                      <div className="relative mx-auto mb-8" style={{ width: '120px', height: '120px' }}>
                         <div className="absolute inset-0 flex items-center justify-center">
                           {/* Tuberías */}
                           <div className="absolute left-0 top-1/2 w-12 h-3 bg-gray-400 rounded-full transform -translate-y-1/2"></div>
@@ -527,12 +515,12 @@ export default function SystemDetailsModal({ open, onClose, system }) {
                             </>
                           )}
                         </div>
-                        
-                        {/* Etiquetas */}
-                        <div className="absolute -bottom-8 left-0 right-0 flex justify-between text-xs text-gray-600 font-medium">
-                          <span className="bg-white px-2 py-1 rounded shadow-sm">Entrada</span>
-                          <span className="bg-white px-2 py-1 rounded shadow-sm">Salida</span>
-                        </div>
+                      </div>
+                      
+                      {/* Etiquetas separadas */}
+                      <div className="flex justify-between text-xs text-gray-600 font-medium mb-4">
+                        <span className="bg-white px-2 py-1 rounded shadow-sm border border-gray-200">Entrada</span>
+                        <span className="bg-white px-2 py-1 rounded shadow-sm border border-gray-200">Salida</span>
                       </div>
                       
                       {/* Estado y control de la válvula */}
@@ -604,7 +592,7 @@ export default function SystemDetailsModal({ open, onClose, system }) {
                                 nivel: newLevel,
                                 sensor: Math.max(0, (prev.at(-1)?.sensor ?? 35) + (Math.random() * 1.2 - 0.6)),
                                 valvula: prev.at(-1)?.valvula || "Abierta",
-                                signal: Math.max(40, Math.min(100, (prev.at(-1)?.signal ?? 80) + (Math.random() * 6 - 3))),
+                                // signal: Math.max(40, Math.min(100, (prev.at(-1)?.signal ?? 80) + (Math.random() * 6 - 3))), // Eliminado según solicitud
                                 note: "Ajuste manual",
                               },
                             ];
@@ -614,7 +602,7 @@ export default function SystemDetailsModal({ open, onClose, system }) {
                         }}
                         className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
                       />
-                      <div className="flex justify-between text-xs text-gray-500">
+                      <div className="flex justify-between text-xs text-gray-500 dark:text-gray-400">
                         <span>0%</span>
                         <span>500L</span>
                       </div>
@@ -650,10 +638,6 @@ export default function SystemDetailsModal({ open, onClose, system }) {
                         </span>
                       </div>
 
-                      <div className="flex justify-between items-center">
-                        <span className="text-sm text-gray-600">Señal:</span>
-                        <span className="text-sm font-medium text-gray-800">{system.controller?.signal ?? 0}%</span>
-                      </div>
                     </div>
 
                     {/* Indicador de llenado progresivo */}
@@ -757,7 +741,6 @@ export default function SystemDetailsModal({ open, onClose, system }) {
                         <th className="px-4 py-2 text-right">Nivel (%)</th>
                         <th className="px-4 py-2 text-right">Sensor (cm)</th>
                         <th className="px-4 py-2 text-left">Válvula</th>
-                        <th className="px-4 py-2 text-right">Señal (%)</th>
                         <th className="px-4 py-2 text-left">Nota</th>
                       </tr>
                     </thead>
@@ -768,7 +751,6 @@ export default function SystemDetailsModal({ open, onClose, system }) {
                           <td className="px-4 py-2 text-right">{Math.round(r.nivel)}</td>
                           <td className="px-4 py-2 text-right">{Number(r.sensor ?? 0).toFixed(1)}</td>
                           <td className="px-4 py-2">{r.valvula}</td>
-                          <td className="px-4 py-2 text-right">{Math.round(r.signal)}</td>
                           <td className="px-4 py-2">{r.note}</td>
                         </tr>
                       ))}

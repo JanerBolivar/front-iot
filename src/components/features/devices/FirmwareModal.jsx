@@ -1,4 +1,4 @@
-import React, { useMemo, useState, useEffect } from "react";
+import React, { useMemo, useState } from "react";
 import useWebSerial from "@/hooks/useWebSerial";
 import { X, Upload, PlugZap, Usb, Search, Package, Download, Star, Clock } from "lucide-react";
 
