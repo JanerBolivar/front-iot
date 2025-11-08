@@ -1,32 +1,16 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import {
   Radar, RefreshCw, Plus, MapPin, Power, Clock,
   Droplets, Activity, Settings, Wrench, Download, Edit3
 } from "lucide-react";
+import { toast } from "sonner";
 import FirmwareModal from "@/components/features/devices/FirmwareModal";
 import SystemDetailsModal from "@/components/features/devices/SystemDetailsModal";
 import AddDeviceModal from "@/components/features/devices/AddDeviceModal";
 import EditDeviceModal from "@/components/features/devices/EditDeviceModal";
 import { useAuth } from "@/context/AuthContext";
-
-// Clave dinámica basada en el usuario actual
-const getLSKey = (userId) => `gd_systems_${userId}`;
-
-const loadSystems = (userId) => {
-  try { 
-    const key = getLSKey(userId);
-    return JSON.parse(localStorage.getItem(key) || "[]"); 
-  }
-  catch { return []; }
-};
-const saveSystems = (arr, userId) => {
-  try { 
-    const key = getLSKey(userId);
-    localStorage.setItem(key, JSON.stringify(arr)); 
-  } catch (error) {
-    console.warn('Error saving systems to localStorage:', error);
-  }
-};
+import LoadingSpinner from "@/components/common/LoadingSpinner";
+import apiService from "@/services/api";
 
 // Función para exportar historial de telemetría a CSV
 const exportTelemetryCSV = (system) => {
@@ -82,97 +66,82 @@ const exportTelemetryCSV = (system) => {
   document.body.removeChild(link);
 };
 
-// MIGRACIÓN: junta los 3 dispositivos sueltos (gd_devices) en 1 sistema con controller (ESP32)
-const migrateLegacyIfNeeded = (userId) => {
-  try {
-    const legacy = JSON.parse(localStorage.getItem("gd_devices") || "[]");
-    const current = loadSystems(userId);
-    if (current.length || !Array.isArray(legacy) || legacy.length === 0) return;
-
-    const modules = [];
-    const pick = (type, fallbackName) => {
-      const found = legacy.find(d => (d.type || "").toLowerCase().includes(type));
-      if (!found) return null;
-      return {
-        key: type, // "nivel" | "sensor" | "actuador"
-        name: found.name || fallbackName,
-        status: found.status || "online",
-        signal: found.signal ?? 0,
-        location: found.location || "",
-        lastSeen: found.lastSeen || new Date().toISOString(),
-      };
-    };
-    const mTank   = pick("nivel",    "Tanque 500L");
-    const mSensor = pick("sensor",   "Sensor HC-SR04");
-    const mValve  = pick("actuador", "Válvula Solenoide");
-    if (mTank)   modules.push(mTank);
-    if (mSensor) modules.push(mSensor);
-    if (mValve)  modules.push(mValve);
-
-    // Controller (ESP32) derivado: online si alguno online; señal = máx; lastSeen más reciente.
-    const anyOnline = legacy.some(d => d.status === "online");
-    const bestSignal = Math.max(0, ...legacy.map(d => d.signal ?? 0));
-    const lastSeen = legacy
-      .map(d => new Date(d.lastSeen || Date.now()).getTime())
-      .reduce((a, b) => Math.max(a, b), Date.now());
-
-    const system = {
-      id: "sys-" + Math.random().toString(36).slice(2, 8),
-      name: "Sistema de Agua #1",
-      location: mTank?.location || mSensor?.location || mValve?.location || "Planta piloto",
-      createdAt: new Date().toISOString(),
-      controller: {
-        status: anyOnline ? "online" : "offline",
-        signal: bestSignal,
-        lastSeen: new Date(lastSeen).toISOString(),
-      },
-      modules,
-    };
-
-    saveSystems([system], userId);
-    // Opcional: limpiar lo viejo
-    // localStorage.removeItem("gd_devices");
-  } catch (error) {
-    console.warn('Error during legacy migration:', error);
-  }
+const buildLocationString = (device) => {
+  const parts = [];
+  if (device.building) parts.push(device.building);
+  if (device.floor) parts.push(`Piso ${device.floor}`);
+  if (device.room) parts.push(device.room);
+  return parts.join(" • ") || device.location || device.deviceLocation || "Ubicación no especificada";
 };
 
-// SEED de demo si no hay nada
-const seedIfEmpty = (userId) => {
-  const cur = loadSystems(userId);
-  if (cur.length) return cur;
+const normalizeDevice = (raw) => {
+  const now = new Date().toISOString();
+  const id = raw.id || raw.deviceId || `sys-${Math.random().toString(36).slice(2, 10)}`;
+  const firstName = raw.firstName || raw.userFirstName || "";
+  const lastName = raw.lastName || raw.userLastName || "";
+  const responsible = raw.responsible || [firstName, lastName].filter(Boolean).join(" ");
 
-  const demo = [{
-    id: "sys-001",
-    name: "Sistema de Agua #1",
-    location: "Planta piloto",
-    createdAt: new Date().toISOString(),
-    controller: {
-      status: "online",
-      signal: 88,
-      lastSeen: new Date(Date.now() - 6 * 24 * 60 * 60 * 1000).toISOString(),
+  const name =
+    raw.name ||
+    raw.deviceName ||
+    raw.title ||
+    (responsible ? `Dispositivo de ${responsible}` : "Dispositivo sin nombre");
+
+  const status = raw.status || raw.controller?.status || "online";
+  const signal = raw.signal ?? raw.controller?.signal ?? 90;
+  const lastSeen = raw.lastSeen || raw.controller?.lastSeen || now;
+  const location = buildLocationString(raw);
+
+  const controller = {
+    status,
+    signal,
+    lastSeen,
+    ...(raw.controller || {}),
+  };
+
+  const baseModules = [
+    {
+      key: "nivel",
+      name: `${name} - Tanque`,
     },
-    modules: [
-      {
-        key: "nivel", name: "Tanque 500L", status: "online", signal: 92,
-        location: "Bloque A • Lab 1",
-        lastSeen: new Date(Date.now() - 6 * 24 * 60 * 60 * 1000).toISOString(),
-      },
-      {
-        key: "sensor", name: "Sensor HC-SR04", status: "offline", signal: 0,
-        location: "Bloque B • Sala 3",
-        lastSeen: new Date(Date.now() - 6 * 24 * 60 * 60 * 1000).toISOString(),
-      },
-      {
-        key: "actuador", name: "Válvula Solenoide", status: "online", signal: 77,
-        location: "Planta piloto",
-        lastSeen: new Date(Date.now() - 6 * 24 * 60 * 60 * 1000).toISOString(),
-      },
-    ],
-  }];
+    {
+      key: "sensor",
+      name: `${name} - Sensor`,
+    },
+    {
+      key: "actuador",
+      name: `${name} - Válvula`,
+    },
+  ];
 
-  saveSystems(demo, userId);
-  return demo;
+  const modulesSource = Array.isArray(raw.modules) && raw.modules.length ? raw.modules : baseModules;
+  const modules = modulesSource.map((module, index) => ({
+    key: module.key || module.moduleKey || baseModules[index]?.key || `module-${index}`,
+    name: module.name || module.moduleName || baseModules[index]?.name || `Módulo ${index + 1}`,
+    status: module.status || status,
+    signal: module.signal ?? signal,
+    location: module.location || location,
+    lastSeen: module.lastSeen || lastSeen,
+  }));
+
+  return {
+    id,
+    name,
+    controller,
+    modules,
+    location,
+    building: raw.building || "",
+    floor: raw.floor || "",
+    room: raw.room || "",
+    description: raw.description || "",
+    maintenanceInterval: raw.maintenanceInterval ?? 30,
+    nextMaintenance: raw.nextMaintenance || null,
+    lastMaintenance: raw.lastMaintenance || null,
+    createdAt: raw.createdAt || now,
+    updatedAt: raw.updatedAt || now,
+    userId: raw.userId || raw.ownerId,
+    status,
+  };
 };
 
 const timeAgo = (iso) => {
@@ -206,6 +175,8 @@ const ModuleChip = ({ m }) => {
 export default function DevicesSection() {
   const { user, token } = useAuth();
   const [systems, setSystems] = useState([]);
+  const [loadingDevices, setLoadingDevices] = useState(true);
+  const [error, setError] = useState("");
   const [openFw, setOpenFw] = useState(false);
   const [currentSystem, setCurrentSystem] = useState(null);
   const [openDetails, setOpenDetails] = useState(false);
@@ -215,22 +186,22 @@ export default function DevicesSection() {
   const [refreshing, setRefreshing] = useState(false);
 
   useEffect(() => {
-    if (!user?.uuid) return;
-
-    migrateLegacyIfNeeded(user.uuid);
-    setSystems(seedIfEmpty(user.uuid));
-  }, [user?.uuid]);
+    if (!user?.id) return;
+    
+    migrateLegacyIfNeeded(user.id);
+    setSystems(seedIfEmpty(user.id));
+  }, [user?.id]);
 
   useEffect(() => {
-    if (!user?.uuid) return;
-
-    const userLSKey = getLSKey(user.uuid);
+    if (!user?.id) return;
+    
+    const userLSKey = getLSKey(user.id);
     const onStorage = (e) => {
-      if (e.key === userLSKey) setSystems(loadSystems(user.uuid));
+      if (e.key === userLSKey) setSystems(loadSystems(user.id));
     };
     window.addEventListener("storage", onStorage);
     return () => window.removeEventListener("storage", onStorage);
-  }, [user?.uuid]);
+  }, [user?.id]);
 
   // MÉTRICAS desde controller
   const metrics = useMemo(() => {
@@ -242,107 +213,83 @@ export default function DevicesSection() {
 
   const refresh = () => {
     if (!user?.id) return;
-    
     setRefreshing(true);
-    setSystems(loadSystems(user.id));
-    setTimeout(() => setRefreshing(false), 500);
+    fetchDevices().finally(() => setRefreshing(false));
   };
 
   // Función para manejar el guardado de nuevos dispositivos
-  const handleSaveDevice = (deviceData) => {
+  const handleSaveDevice = async (deviceData) => {
     if (!user?.id) return;
-    
-    const newSystem = {
-      id: `sys-${Date.now()}`,
-      name: deviceData.name,
-      type: deviceData.type,
-      capacity: deviceData.capacity,
-      unit: deviceData.unit,
-      location: deviceData.location,
-      building: deviceData.building,
-      floor: deviceData.floor,
-      room: deviceData.room,
-      description: deviceData.description,
-      manufacturer: deviceData.manufacturer,
-      model: deviceData.model,
-      serialNumber: deviceData.serialNumber,
-      installationDate: deviceData.installationDate,
-      maintenanceInterval: deviceData.maintenanceInterval,
-      controller: {
-        status: "online",
-        signal: Math.floor(85 + Math.random() * 15),
-        lastSeen: new Date().toISOString(),
-      },
-      modules: [
-        { 
-          key: "nivel", 
-          name: `${deviceData.name} - Tanque ${deviceData.capacity}${deviceData.unit}`, 
-          status: "online", 
-          signal: Math.floor(85 + Math.random() * 15), 
-          location: `${deviceData.building}${deviceData.floor ? ` - Piso ${deviceData.floor}` : ''}${deviceData.room ? ` - ${deviceData.room}` : ''}`, 
-          lastSeen: new Date().toISOString() 
-        },
-        { 
-          key: "sensor", 
-          name: `${deviceData.name} - Sensor`, 
-          status: "online", 
-          signal: Math.floor(80 + Math.random() * 20), 
-          location: `${deviceData.building}${deviceData.floor ? ` - Piso ${deviceData.floor}` : ''}${deviceData.room ? ` - ${deviceData.room}` : ''}`, 
-          lastSeen: new Date().toISOString() 
-        },
-        { 
-          key: "actuador", 
-          name: `${deviceData.name} - Válvula`, 
-          status: "online", 
-          signal: Math.floor(75 + Math.random() * 25), 
-          location: `${deviceData.building}${deviceData.floor ? ` - Piso ${deviceData.floor}` : ''}${deviceData.room ? ` - ${deviceData.room}` : ''}`, 
-          lastSeen: new Date().toISOString() 
-        },
-      ],
-      createdAt: new Date().toISOString(),
-      status: deviceData.status,
-      lastMaintenance: deviceData.lastMaintenance,
-      nextMaintenance: deviceData.nextMaintenance
+
+    const payload = {
+      ...deviceData,
+      userId: user.id,
     };
 
-    const updatedSystems = [...systems, newSystem];
-    saveSystems(updatedSystems, user.id);
-    setSystems(updatedSystems);
+    try {
+      const response = await apiService.createDevice(payload);
+      const created = response?.device || response || {};
+      const normalized = normalizeDevice({
+        ...payload,
+        ...created,
+      });
+      setSystems((prev) => [...prev, normalized]);
+      toast.success("Dispositivo creado correctamente");
+      return normalized;
+    } catch (error) {
+      console.error("Error creando dispositivo:", error);
+      toast.error(error?.message || "No se pudo crear el dispositivo");
+      throw error;
+    }
   };
 
-  const handleUpdateDevice = (deviceData) => {
+  const handleUpdateDevice = async (deviceData) => {
     if (!user?.id || !editingDevice) return;
-    
-    const updatedSystems = systems.map(sys => 
-      sys.id === editingDevice.id 
-        ? {
-            ...sys,
-            name: deviceData.name,
-            type: deviceData.type,
-            specs: deviceData.specs,
-            location: deviceData.location,
-            building: deviceData.building,
-            floor: deviceData.floor,
-            room: deviceData.room,
-            description: deviceData.description,
-            maintenanceInterval: deviceData.maintenanceInterval,
-            status: deviceData.status,
-            updatedAt: new Date().toISOString(),
-            // Mantener la fecha de creación original si existe
-            createdAt: sys.createdAt || new Date().toISOString()
-          }
-        : sys
-    );
-    
-    saveSystems(updatedSystems, user.id);
-    setSystems(updatedSystems);
-    setEditingDevice(null);
-    setOpenEditDevice(false);
+
+    try {
+      const payload = {
+        ...deviceData,
+        userId: editingDevice.userId || user.id,
+      };
+      const response = await apiService.updateDevice(editingDevice.id, payload);
+      const updated = response?.device || response || {};
+      const normalized = normalizeDevice({
+        ...editingDevice,
+        ...payload,
+        ...updated,
+      });
+
+      setSystems((prev) =>
+        prev.map((sys) => (sys.id === editingDevice.id ? normalized : sys))
+      );
+      toast.success("Dispositivo actualizado correctamente");
+      setEditingDevice(null);
+      setOpenEditDevice(false);
+      return normalized;
+    } catch (error) {
+      console.error("Error actualizando dispositivo:", error);
+      toast.error(error?.message || "No se pudo actualizar el dispositivo");
+      throw error;
+    }
   };
 
   const handleEditDevice = (device) => {
     setEditingDevice(device);
     setOpenEditDevice(true);
+  };
+
+  const handleDeleteDevice = async (deviceId) => {
+    try {
+      await apiService.deleteDevice(deviceId);
+      setSystems((prev) => prev.filter((sys) => sys.id !== deviceId));
+      if (currentSystem?.id === deviceId) {
+        setCurrentSystem(null);
+      }
+      toast.success("Dispositivo eliminado");
+    } catch (error) {
+      console.error("Error eliminando dispositivo:", error);
+      toast.error(error?.message || "No se pudo eliminar el dispositivo");
+    }
   };
 
   // Si no hay usuario autenticado, mostrar mensaje
@@ -355,6 +302,20 @@ export default function DevicesSection() {
           </div>
           <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Cargando dispositivos...</h2>
           <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">Esperando autenticación del usuario.</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (loadingDevices) {
+    return (
+      <div className="max-w-6xl mx-auto">
+        <div className="rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-10 text-center">
+          <div className="mx-auto mb-4 grid h-14 w-14 place-items-center rounded-full bg-gray-100 dark:bg-gray-700">
+            <LoadingSpinner />
+          </div>
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Cargando dispositivos...</h2>
+          <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">Obteniendo información desde la API.</p>
         </div>
       </div>
     );
@@ -378,6 +339,12 @@ export default function DevicesSection() {
           </button>
         </div>
       </div>
+
+      {error && (
+        <div className="mb-6 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-700 dark:border-amber-800 dark:bg-amber-900/30 dark:text-amber-300">
+          {error}
+        </div>
+      )}
 
       {/* Métricas */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
@@ -503,12 +470,7 @@ export default function DevicesSection() {
 
                         <button
                           className={btn.danger}
-                          onClick={() => {
-                            if (!user?.id) return;
-                            const next = systems.filter((x) => x.id !== sys.id);
-                            saveSystems(next, user.id);
-                            setSystems(next);
-                          }}
+                          onClick={() => handleDeleteDevice(sys.id)}
                         >
                           Eliminar
                         </button>

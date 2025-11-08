@@ -10,12 +10,15 @@ const SESSION_TIMESTAMP_KEY = "gd_session_timestamp";
 // Admin de demo (solo para desarrollo)
 const DEMO_ADMIN = {
   id: crypto?.randomUUID?.() || String(Date.now()),
+  firstName: "Admin",
+  lastName: "Demo",
   name: "Admin Demo",
   email: "admin@demo.com",
   password: "admin123",
   role: "admin",
   active: true,
   createdAt: new Date().toISOString(),
+  updatedAt: new Date().toISOString(),
 };
 
 // helpers de localStorage
@@ -28,6 +31,29 @@ const read = (key, fallback = null) => {
   }
 };
 const write = (key, value) => localStorage.setItem(key, JSON.stringify(value));
+
+const deriveNameParts = (data = {}) => {
+  const firstName = data.firstName || data.first_name;
+  const lastName = data.lastName || data.last_name;
+
+  if (firstName || lastName) {
+    return {
+      firstName: firstName || "",
+      lastName: lastName || "",
+    };
+  }
+
+  const fullName = (data.name || "").trim();
+  if (!fullName) {
+    return { firstName: "", lastName: "" };
+  }
+
+  const parts = fullName.split(/\s+/);
+  return {
+    firstName: parts[0],
+    lastName: parts.slice(1).join(" "),
+  };
+};
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
@@ -62,14 +88,43 @@ export function AuthProvider({ children }) {
   }, []);
   
 
-  const register = async ({ first_name, last_name, email, password }) => {
+  const register = async ({ firstName, lastName, email, password, role = "user" }) => {
+    const payload = {
+      firstName,
+      lastName,
+      email,
+      password,
+      role,
+      name: `${firstName} ${lastName}`.trim(),
+    };
+
     try {
       // Intentar conectar con la API real
-      const response = await apiService.register({ first_name, last_name, email, password });
+      const response = await apiService.register(payload);
       return response;
     } catch (error) {
       // Fallback a localStorage si la API no está disponible
       console.warn('API no disponible, usando localStorage:', error.message);
+      const users = read(USERS_KEY, []);
+      if (users.some(u => (u.email || "").toLowerCase() === email.toLowerCase())) {
+        throw new Error("El correo ya está registrado");
+      }
+
+      const newUser = {
+        id: crypto?.randomUUID?.() || String(Date.now()),
+        firstName,
+        lastName,
+        name: payload.name,
+        email,
+        password, // ⚠️ demo (texto plano)
+        role,
+        active: true,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      };
+
+      write(USERS_KEY, [...users, newUser]);
+      return newUser;
     }
   };
 
@@ -81,14 +136,19 @@ export function AuthProvider({ children }) {
       if (response.token) {
         localStorage.setItem('auth_token', response.token);
       }
+
+      const nameParts = deriveNameParts(response.user || response);
+      const displayName =
+        response.user?.name ||
+        response.name ||
+        [nameParts.firstName, nameParts.lastName].filter(Boolean).join(" ");
       
       // Crear sesión del usuario
       const session = {
-        uuid: response.user?.uuid,
-        first_name: response.user?.first_name,
-        last_name: response.user?.last_name,
-        email: response.user?.email,
-        role: response.user?.role,
+        id: response.user?.id || response.id,
+        name: response.user?.name || response.name,
+        email: response.user?.email || response.email,
+        role: response.user?.role || response.role || "user",
         isAdmin: ((response.user?.role || response.role || "")).toLowerCase() === "admin",
       };
       
@@ -113,9 +173,16 @@ export function AuthProvider({ children }) {
         throw new Error("Credenciales inválidas");
       }
 
+      const localNameParts = deriveNameParts(found);
+      const localDisplayName =
+        found.name ||
+        [localNameParts.firstName, localNameParts.lastName].filter(Boolean).join(" ");
+
       const session = {
         id: found.id,
-        name: found.name,
+        name: localDisplayName.trim(),
+        firstName: localNameParts.firstName,
+        lastName: localNameParts.lastName,
         email: found.email,
         role: found.role || "user",
         isAdmin: (found.role || "").toLowerCase() === "admin",

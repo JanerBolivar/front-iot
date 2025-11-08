@@ -83,26 +83,28 @@ export default function AddDeviceModal({ isOpen, onClose, onSave }) {
 
   const onSubmit = async (data) => {
     setLoading(true);
-    try {
-      // Simular guardado (aquí conectarías con tu API)
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      const deviceData = {
-        id: Date.now().toString(),
-        ...data,
-        createdAt: new Date().toISOString(),
-        status: 'active',
-        lastMaintenance: null,
-        nextMaintenance: new Date(Date.now() + data.maintenanceInterval * 24 * 60 * 60 * 1000).toISOString()
-      };
+    const maintenanceInterval = Number(data.maintenanceInterval || 30);
+    const now = new Date();
 
-      onSave(deviceData);
-      toast.success('Placa agregada exitosamente');
+    const deviceData = {
+      ...data,
+      maintenanceInterval,
+      createdAt: now.toISOString(),
+      updatedAt: now.toISOString(),
+      lastMaintenance: null,
+      nextMaintenance:
+        maintenanceInterval > 0
+          ? new Date(now.getTime() + maintenanceInterval * 24 * 60 * 60 * 1000).toISOString()
+          : null,
+    };
+
+    try {
+      await onSave(deviceData);
       reset();
       onClose();
     } catch (error) {
-      console.error('Error adding device:', error);
-      toast.error('Error al agregar la placa');
+      console.error('Error al guardar la placa:', error);
+      toast.error(error?.message || 'Error al guardar la placa');
     } finally {
       setLoading(false);
     }
