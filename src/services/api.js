@@ -113,8 +113,12 @@ class ApiService {
     });
   }
 
-  async getDevices() {
-    return this.request('/api/device/device-list');
+  async getDevices(token) {
+    return this.request('/api/device/device-list', {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
   }
 
   async updateDevice(id, deviceData) {

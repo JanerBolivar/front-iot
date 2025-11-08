@@ -10,6 +10,7 @@ import AddDeviceModal from "@/components/features/devices/AddDeviceModal";
 import EditDeviceModal from "@/components/features/devices/EditDeviceModal";
 import { useAuth } from "@/context/AuthContext";
 import LoadingSpinner from "@/components/common/LoadingSpinner";
+import axios from "axios";
 import apiService from "@/services/api";
 
 // Función para exportar historial de telemetría a CSV
@@ -17,19 +18,19 @@ const exportTelemetryCSV = (system) => {
   // Generar datos de telemetría simulados (en una app real vendrían de la API)
   const telemetryData = [];
   const now = new Date();
-  
+
   // Generar datos de los últimos 30 días
   for (let i = 0; i < 30; i++) {
     const date = new Date(now.getTime() - (i * 24 * 60 * 60 * 1000));
     const dayData = [];
-    
+
     // Generar 24 horas de datos por día
     for (let hour = 0; hour < 24; hour++) {
       const timestamp = new Date(date.getTime() + (hour * 60 * 60 * 1000));
       const waterLevel = Math.max(0, Math.min(100, 60 + Math.sin(hour / 4) * 20 + Math.random() * 10 - 5));
       const temperature = 20 + Math.sin(hour / 6) * 5 + Math.random() * 3;
       const valveStatus = waterLevel > 80 ? 'closed' : 'open';
-      
+
       dayData.push({
         timestamp: timestamp.toISOString(),
         waterLevel: waterLevel.toFixed(2),
@@ -38,10 +39,10 @@ const exportTelemetryCSV = (system) => {
         // signal: Math.floor(85 + Math.random() * 15) // Eliminado según solicitud
       });
     }
-    
+
     telemetryData.push(...dayData);
   }
-  
+
   // Crear CSV
   const headers = ['Timestamp', 'Water Level (%)', 'Temperature (°C)', 'Valve Status'];
   const csvContent = [
@@ -53,7 +54,7 @@ const exportTelemetryCSV = (system) => {
       row.valveStatus
     ].join(','))
   ].join('\n');
-  
+
   // Descargar archivo
   const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
   const link = document.createElement('a');
@@ -160,8 +161,8 @@ const timeAgo = (iso) => {
 const ModuleChip = ({ m }) => {
   const Icon =
     m.key === "nivel" ? Droplets :
-    m.key === "sensor" ? Activity :
-    Settings;
+      m.key === "sensor" ? Activity :
+        Settings;
   const color =
     m.status === "online" ? "bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300" : "bg-rose-100 dark:bg-rose-900/30 text-rose-700 dark:text-rose-300";
   return (
@@ -185,45 +186,45 @@ export default function DevicesSection() {
   const [editingDevice, setEditingDevice] = useState(null);
   const [refreshing, setRefreshing] = useState(false);
 
-  useEffect(() => {
-    if (!user?.id) return;
-    
-    migrateLegacyIfNeeded(user.id);
-    setSystems(seedIfEmpty(user.id));
-  }, [user?.id]);
+  const fetchDevices = async () => {
+    try {
+      const response = await apiService.getDevices(token);
+      setSystems(response || []);
+    } catch (error) {
+      console.error('Error fetching devices:', error);
+    } finally {
+      setLoadingDevices(false);
+    }
+  };
 
   useEffect(() => {
-    if (!user?.id) return;
-    
-    const userLSKey = getLSKey(user.id);
-    const onStorage = (e) => {
-      if (e.key === userLSKey) setSystems(loadSystems(user.id));
-    };
-    window.addEventListener("storage", onStorage);
-    return () => window.removeEventListener("storage", onStorage);
-  }, [user?.id]);
+    if (!user?.uuid) return;
+
+    fetchDevices();
+    // setSystems(seedIfEmpty(user.uuid));
+  }, [user?.uuid]);
 
   // MÉTRICAS desde controller
   const metrics = useMemo(() => {
     const total = systems.length;
-    const online = systems.filter(sys => sys.controller?.status === "online").length;
+    const online = true;
     const offline = total - online;
     return { total, online, offline };
   }, [systems]);
 
   const refresh = () => {
-    if (!user?.id) return;
+    if (!user?.uuid) return;
     setRefreshing(true);
     fetchDevices().finally(() => setRefreshing(false));
   };
 
   // Función para manejar el guardado de nuevos dispositivos
   const handleSaveDevice = async (deviceData) => {
-    if (!user?.id) return;
+    if (!user?.uuid) return;
 
     const payload = {
       ...deviceData,
-      userId: user.id,
+      userId: user.uuid,
     };
 
     try {
@@ -377,10 +378,10 @@ export default function DevicesSection() {
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           {systems.map((sys) => {
-            const online = sys.controller?.status === "online";
+            const online = true;
             const statusClass = online ? "bg-green-100 text-green-700" : "bg-rose-100 text-rose-700";
             const statusLabel = online ? "En línea" : "Fuera de línea";
-            const lastSeen = sys.controller?.lastSeen || sys.modules[0]?.lastSeen;
+            const lastSeen = sys.updatedAt;
 
             return (
               <article key={sys.id} className="rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-4 shadow-sm hover:shadow-md transition-shadow">
@@ -391,7 +392,7 @@ export default function DevicesSection() {
                     </div>
                     <div>
                       <h3 className="font-semibold text-gray-900 dark:text-gray-100">{sys.name}</h3>
-                      <p className="text-xs text-gray-500 dark:text-gray-400">{sys.location}</p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400">{sys.location.ubicacion || "No Aplica"}</p>
                     </div>
                   </div>
                   <span className={`rounded-full px-2 py-0.5 text-xs ${statusClass}`}>
@@ -401,19 +402,20 @@ export default function DevicesSection() {
 
                 {/* Módulos */}
                 <div className="mt-3 flex flex-wrap gap-2">
-                  {sys.modules.map((m, i) => (<ModuleChip key={i} m={m} />))}
+                  No Aplica
+                  {/*  {sys.modules.map((m, i) => (<ModuleChip key={i} m={m} />))} */}
                 </div>
 
                 {/* Info rápida (desde controller) */}
                 <div className="mt-4 grid grid-cols-2 gap-3 text-sm">
                   <div className="flex items-center gap-2 text-gray-700 dark:text-gray-300">
-                    <MapPin className="h-4 w-4 text-gray-400 dark:text-gray-500" /> <span className="truncate" title={sys.location}>{sys.location}</span>
+                    <MapPin className="h-4 w-4 text-gray-400 dark:text-gray-500" /> <span className="truncate" title={sys.location.ubicacion || "No Aplica"}>{sys.location.ubicacion || "No Aplica"}</span>
                   </div>
                   <div className="flex items-center gap-2 text-gray-700 dark:text-gray-300">
                     <Clock className="h-4 w-4 text-gray-400 dark:text-gray-500" /> Actualizado: {timeAgo(lastSeen)}
                   </div>
                   <div className="flex items-center gap-2 text-gray-700 dark:text-gray-300">
-                    <Power className="h-4 w-4 text-gray-400 dark:text-gray-500" /> ID: <span className="font-mono text-xs">{sys.id}</span>
+                    <Power className="h-4 w-4 text-gray-400 dark:text-gray-500" /> ID: <span className="font-mono text-xs">{sys.uuid}</span>
                   </div>
                 </div>
 
@@ -493,7 +495,7 @@ export default function DevicesSection() {
       <SystemDetailsModal
         open={openDetails}
         onClose={() => setOpenDetails(false)}
-        system={currentSystem}    
+        system={currentSystem}
       />
 
       <AddDeviceModal

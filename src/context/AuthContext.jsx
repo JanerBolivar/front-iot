@@ -136,17 +136,12 @@ export function AuthProvider({ children }) {
       if (response.token) {
         localStorage.setItem('auth_token', response.token);
       }
-
-      const nameParts = deriveNameParts(response.user || response);
-      const displayName =
-        response.user?.name ||
-        response.name ||
-        [nameParts.firstName, nameParts.lastName].filter(Boolean).join(" ");
       
       // Crear sesión del usuario
       const session = {
-        id: response.user?.id || response.id,
-        name: response.user?.name || response.name,
+        uuid: response.user?.uuid,
+        first_name: response.user?.firstName || response.firstName,
+        last_name: response.user?.lastName || response.lastName,
         email: response.user?.email || response.email,
         role: response.user?.role || response.role || "user",
         isAdmin: ((response.user?.role || response.role || "")).toLowerCase() === "admin",
