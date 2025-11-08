@@ -14,7 +14,8 @@ export default function RegisterPage() {
   const { register } = useAuth();
   const navigate = useNavigate();
 
-  const [name, setName] = useState("");
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
   const [pass1, setPass1] = useState("");
   const [pass2, setPass2] = useState("");
@@ -22,13 +23,20 @@ export default function RegisterPage() {
 
   const onSubmit = async (e) => {
     e.preventDefault();
-    if (!name || !email || !pass1 || !pass2) return toast.error("Completa todos los campos");
+    if (!firstName.trim() || !lastName.trim() || !email.trim() || !pass1 || !pass2) {
+      return toast.error("Completa todos los campos");
+    }
     if (pass1.length < 6) return toast.error("La contraseña debe tener al menos 6 caracteres");
     if (pass1 !== pass2) return toast.error("Las contraseñas no coinciden");
 
     setSubmitting(true);
     try {
-      await register({ name, email, password: pass1 });
+      await register({
+        firstName: firstName.trim(),
+        lastName: lastName.trim(),
+        email: email.trim(),
+        password: pass1,
+      });
       toast.success("Cuenta creada. Ahora inicia sesión.");
       navigate("/login");
     } catch (err) {
@@ -58,9 +66,25 @@ export default function RegisterPage() {
         </CardHeader>
         <CardContent>
           <form className="space-y-4" onSubmit={onSubmit}>
-            <div className="space-y-2">
-              <Label htmlFor="name">Nombre</Label>
-              <Input id="name" value={name} onChange={(e)=>setName(e.target.value)} placeholder="Tu nombre" />
+            <div className="grid gap-4 md:grid-cols-2">
+              <div className="space-y-2">
+                <Label htmlFor="firstName">Primer Nombre</Label>
+                <Input
+                  id="firstName"
+                  value={firstName}
+                  onChange={(e) => setFirstName(e.target.value)}
+                  placeholder="Ej: Juan"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="lastName">Primer Apellido</Label>
+                <Input
+                  id="lastName"
+                  value={lastName}
+                  onChange={(e) => setLastName(e.target.value)}
+                  placeholder="Ej: Pérez"
+                />
+              </div>
             </div>
             <div className="space-y-2">
               <Label htmlFor="email">Correo</Label>

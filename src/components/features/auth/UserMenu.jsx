@@ -74,44 +74,33 @@ export default function UserMenu() {
           </div>
           <div className="h-px bg-gray-200" />
 
-          <Link
-            to="/docs"
-            onClick={() => setOpen(false)}
-            className="flex items-center gap-2 px-4 py-2.5 text-sm hover:bg-gray-50"
-          >
-            <FileText className="h-4 w-4" />
-            Docs públicas
-          </Link>
+          <div className="py-1">
+            <SectionLink to="/docs" icon={FileText} label="Docs públicas" onNavigate={() => setOpen(false)} />
 
-          <Link
-            to="/app/profile"
-            onClick={() => setOpen(false)}
-            className="flex items-center gap-2 px-4 py-2.5 text-sm hover:bg-gray-50"
-          >
-            <UserIcon className="h-4 w-4" />
-            Mi perfil
-          </Link>
+            <SectionLink
+              to="/app/profile"
+              icon={UserIcon}
+              label="Mi perfil"
+              onNavigate={() => setOpen(false)}
+            />
 
-          {isAdmin && (
-            <>
-              <Link
-                to="/app/admin/users"
-                onClick={() => setOpen(false)}
-                className="flex items-center gap-2 px-4 py-2.5 text-sm hover:bg-gray-50"
-              >
-                <Users className="h-4 w-4" />
-                Admin (usuarios)
-              </Link>
-              <Link
-                to="/app/admin/diagnostic"
-                onClick={() => setOpen(false)}
-                className="flex items-center gap-2 px-4 py-2.5 text-sm hover:bg-gray-50"
-              >
-                <Wifi className="h-4 w-4" />
-                Diagnóstico API
-              </Link>
-            </>
-          )}
+            {isAdmin && (
+              <>
+                <SectionLink
+                  to="/app/admin/users"
+                  icon={Users}
+                  label="Admin (usuarios)"
+                  onNavigate={() => setOpen(false)}
+                />
+                <SectionLink
+                  to="/app/admin/diagnostic"
+                  icon={Wifi}
+                  label="Diagnóstico API"
+                  onNavigate={() => setOpen(false)}
+                />
+              </>
+            )}
+          </div>
 
           <button
             onClick={handleLogout}
@@ -123,5 +112,18 @@ export default function UserMenu() {
         </div>
       )}
     </div>
+  );
+}
+
+function SectionLink({ to, icon: Icon, label, onNavigate }) {
+  return (
+    <Link
+      to={to}
+      onClick={onNavigate}
+      className="flex items-center gap-2 px-4 py-2.5 text-sm hover:bg-gray-50"
+    >
+      <Icon className="h-4 w-4" />
+      {label}
+    </Link>
   );
 }
