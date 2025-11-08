@@ -1,4 +1,3 @@
-// src/context/AuthContext.jsx
 import React, { createContext, useContext, useEffect, useMemo, useState } from "react";
 import apiService from "@/services/api";
 
@@ -13,7 +12,7 @@ const DEMO_ADMIN = {
   id: crypto?.randomUUID?.() || String(Date.now()),
   name: "Admin Demo",
   email: "admin@demo.com",
-  password: "admin123", // ⚠️ demo (texto plano)
+  password: "admin123",
   role: "admin",
   active: true,
   createdAt: new Date().toISOString(),
@@ -45,7 +44,7 @@ export function AuthProvider({ children }) {
     const session = read(SESSION_KEY, null);
     const sessionTimestamp = read(SESSION_TIMESTAMP_KEY, null);
     const now = Date.now();
-    const SESSION_DURATION = 24 * 60 * 60 * 1000; // 24 horas en milisegundos
+    const SESSION_DURATION = 6 * 60 * 60 * 1000; // 6 horas en milisegundos
     
     if (session && sessionTimestamp && (now - sessionTimestamp) < SESSION_DURATION) {
       setUser(session);
@@ -58,44 +57,23 @@ export function AuthProvider({ children }) {
     }
     
     setLoading(false);
-    
-    // No limpiar la sesión automáticamente al refrescar
-    // La sesión se mantendrá hasta que expire (24 horas) o se haga logout manual
   }, []);
+  
 
-  // API - Con fallback a localStorage para desarrollo
-  const register = async ({ name, email, password, role = "user" }) => {
+  const register = async ({ first_name, last_name, email, password }) => {
     try {
       // Intentar conectar con la API real
-      const response = await apiService.register({ name, email, password, role });
+      const response = await apiService.register({ first_name, last_name, email, password });
       return response;
     } catch (error) {
       // Fallback a localStorage si la API no está disponible
       console.warn('API no disponible, usando localStorage:', error.message);
-      const users = read(USERS_KEY, []);
-      if (users.some(u => (u.email || "").toLowerCase() === email.toLowerCase())) {
-        throw new Error("El correo ya está registrado");
-      }
-      const newUser = {
-        id: crypto?.randomUUID?.() || String(Date.now()),
-        name,
-        email,
-        password, // ⚠️ demo
-        role,
-        active: true,
-        createdAt: new Date().toISOString(),
-      };
-      write(USERS_KEY, [...users, newUser]);
-      return newUser;
     }
   };
 
   const login = async (email, password) => {
     try {
-      console.log('Intentando login con API real...', { email });
-      // Intentar conectar con la API real
       const response = await apiService.login(email, password);
-      console.log('Respuesta de API:', response);
       
       // Guardar token si la API lo proporciona
       if (response.token) {

@@ -1,9 +1,7 @@
-// src/services/api.js
 import axios from 'axios';
 
 class ApiService {
   constructor() {
-    // Usar axios con la configuración global ya establecida en main.jsx
     this.axios = axios;
   }
 
