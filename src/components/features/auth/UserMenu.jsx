@@ -69,7 +69,7 @@ export default function UserMenu() {
           <div className="absolute -top-2 right-6 h-3 w-3 rotate-45 bg-white border-l border-t border-gray-200"></div>
 
           <div className="px-4 pt-3 pb-2">
-            <p className="text-sm font-semibold text-gray-900">{user?.name || "Usuario"}</p>
+            <p className="text-sm font-semibold text-gray-900">{user?.first_name || 'Usuario'} {user?.last_name || 'Desconocido'}</p>
             {user?.email && <p className="text-xs text-gray-500">{user.email}</p>}
           </div>
           <div className="h-px bg-gray-200" />

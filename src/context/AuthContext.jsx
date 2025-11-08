@@ -31,6 +31,7 @@ const write = (key, value) => localStorage.setItem(key, JSON.stringify(value));
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
+  const [token, setToken] = useState(null);
   const [loading, setLoading] = useState(true);
 
   // Sembrar admin de demo si no existe + hidratar sesión
@@ -47,6 +48,7 @@ export function AuthProvider({ children }) {
     const SESSION_DURATION = 6 * 60 * 60 * 1000; // 6 horas en milisegundos
     
     if (session && sessionTimestamp && (now - sessionTimestamp) < SESSION_DURATION) {
+      setToken(read('auth_token', null));
       setUser(session);
     } else {
       // Limpiar sesión expirada
@@ -82,10 +84,11 @@ export function AuthProvider({ children }) {
       
       // Crear sesión del usuario
       const session = {
-        id: response.user?.id || response.id,
-        name: response.user?.name || response.name,
-        email: response.user?.email || response.email,
-        role: response.user?.role || response.role || "user",
+        uuid: response.user?.uuid,
+        first_name: response.user?.first_name,
+        last_name: response.user?.last_name,
+        email: response.user?.email,
+        role: response.user?.role,
         isAdmin: ((response.user?.role || response.role || "")).toLowerCase() === "admin",
       };
       
@@ -199,7 +202,8 @@ export function AuthProvider({ children }) {
 
   const value = useMemo(
     () => ({ 
-      user, 
+      user,
+      token,
       loading, 
       isAdmin, 
       register, 

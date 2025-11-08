@@ -204,7 +204,7 @@ const ModuleChip = ({ m }) => {
 };
 
 export default function DevicesSection() {
-  const { user } = useAuth();
+  const { user, token } = useAuth();
   const [systems, setSystems] = useState([]);
   const [openFw, setOpenFw] = useState(false);
   const [currentSystem, setCurrentSystem] = useState(null);
@@ -215,22 +215,22 @@ export default function DevicesSection() {
   const [refreshing, setRefreshing] = useState(false);
 
   useEffect(() => {
-    if (!user?.id) return;
-    
-    migrateLegacyIfNeeded(user.id);
-    setSystems(seedIfEmpty(user.id));
-  }, [user?.id]);
+    if (!user?.uuid) return;
+
+    migrateLegacyIfNeeded(user.uuid);
+    setSystems(seedIfEmpty(user.uuid));
+  }, [user?.uuid]);
 
   useEffect(() => {
-    if (!user?.id) return;
-    
-    const userLSKey = getLSKey(user.id);
+    if (!user?.uuid) return;
+
+    const userLSKey = getLSKey(user.uuid);
     const onStorage = (e) => {
-      if (e.key === userLSKey) setSystems(loadSystems(user.id));
+      if (e.key === userLSKey) setSystems(loadSystems(user.uuid));
     };
     window.addEventListener("storage", onStorage);
     return () => window.removeEventListener("storage", onStorage);
-  }, [user?.id]);
+  }, [user?.uuid]);
 
   // MÉTRICAS desde controller
   const metrics = useMemo(() => {
@@ -247,8 +247,6 @@ export default function DevicesSection() {
     setSystems(loadSystems(user.id));
     setTimeout(() => setRefreshing(false), 500);
   };
-
-  // Función addSystem removida - no se usa actualmente
 
   // Función para manejar el guardado de nuevos dispositivos
   const handleSaveDevice = (deviceData) => {
@@ -348,7 +346,7 @@ export default function DevicesSection() {
   };
 
   // Si no hay usuario autenticado, mostrar mensaje
-  if (!user?.id) {
+  if (!user?.uuid) {
     return (
       <div className="max-w-6xl mx-auto">
         <div className="rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-10 text-center">
