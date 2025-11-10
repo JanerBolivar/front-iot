@@ -86,17 +86,25 @@ export default function AddDeviceModal({ isOpen, onClose, onSave }) {
     const maintenanceInterval = Number(data.maintenanceInterval || 30);
     const now = new Date();
 
-    const deviceData = {
-      ...data,
+    const locationPayload = {
+      ubicacion: data.location || "",
+      bloque: data.building || "",
+      piso: data.floor || "",
+      laboratorio: data.room || "",
+    };
+      
+      const deviceData = {
+        ...data,
       maintenanceInterval,
       createdAt: now.toISOString(),
       updatedAt: now.toISOString(),
-      lastMaintenance: null,
+        lastMaintenance: null,
       nextMaintenance:
         maintenanceInterval > 0
           ? new Date(now.getTime() + maintenanceInterval * 24 * 60 * 60 * 1000).toISOString()
           : null,
-    };
+      locationPayload,
+      };
 
     try {
       await onSave(deviceData);

@@ -36,14 +36,43 @@ export default function EditDeviceModal({ isOpen, onClose, onSave, device }) {
   // Cargar datos del dispositivo cuando se abre el modal
   useEffect(() => {
     if (isOpen && device) {
+      const locationSource =
+        device.locationPayload ||
+        device.locationData ||
+        device.location ||
+        {};
+
+      const locationString =
+        typeof locationSource === "object" && locationSource !== null
+          ? locationSource.ubicacion ||
+            locationSource.ubicacionGeneral ||
+            locationSource.general ||
+            ""
+          : (device.location || "");
+
+      const building =
+        device.building ??
+        (typeof locationSource === "object" ? locationSource.bloque : undefined) ??
+        "";
+
+      const floor =
+        device.floor ??
+        (typeof locationSource === "object" ? locationSource.piso : undefined) ??
+        "";
+
+      const room =
+        device.room ??
+        (typeof locationSource === "object" ? locationSource.laboratorio : undefined) ??
+        "";
+
       reset({
         name: device.name || '',
         type: device.type || 'esp32',
         specs: device.specs || '240mhz',
-        location: device.location || '',
-        building: device.building || '',
-        floor: device.floor || '',
-        room: device.room || '',
+        location: locationString,
+        building,
+        floor,
+        room,
         description: device.description || '',
         manufacturer: device.manufacturer || '',
         model: device.model || '',
@@ -106,16 +135,19 @@ export default function EditDeviceModal({ isOpen, onClose, onSave, device }) {
   const onSubmit = async (data) => {
     setLoading(true);
     try {
-      // Simular delay de red
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Llamar a la función onSave con los datos actualizados
+      const locationPayload = {
+        ubicacion: data.location || device?.locationData?.ubicacion || "",
+        bloque: data.building || device?.locationData?.bloque || "",
+        piso: data.floor || device?.locationData?.piso || "",
+        laboratorio: data.room || device?.locationData?.laboratorio || "",
+      };
+
       await onSave({
-        ...device, // Mantener el ID y otros datos existentes
-        ...data
+        ...device,
+        ...data,
+        locationPayload,
       });
-      
-      toast.success('Dispositivo actualizado correctamente');
+
       onClose();
     } catch (error) {
       console.error('Error al actualizar dispositivo:', error);

@@ -13,6 +13,54 @@ import LoadingSpinner from "@/components/common/LoadingSpinner";
 import axios from "axios";
 import apiService from "@/services/api";
 
+const getUserId = (user) => user?.uuid || user?.id || user?.userId || null;
+
+const extractLocationInfo = (raw = {}) => {
+  const locationRaw =
+    raw.location ||
+    raw.ubicacion ||
+    raw.deviceLocation ||
+    raw.locationData ||
+    null;
+
+  let building = raw.building || "";
+  let floor = raw.floor || "";
+  let room = raw.room || "";
+  let general = raw.locationGeneral || "";
+  let payload = null;
+
+  if (locationRaw && typeof locationRaw === "object") {
+    building = locationRaw.bloque ?? locationRaw.building ?? building;
+    floor = locationRaw.piso ?? locationRaw.floor ?? floor;
+    room = locationRaw.laboratorio ?? locationRaw.room ?? room;
+    general =
+      locationRaw.ubicacion ??
+      locationRaw.ubicacionGeneral ??
+      locationRaw.general ??
+      general;
+    payload = { ...locationRaw };
+  } else if (typeof locationRaw === "string") {
+    general = locationRaw;
+  }
+
+  const display = (general || [building, floor, room].filter(Boolean).join(" • ") || "Ubicación no especificada");
+
+  const data = payload || {
+    ubicacion: general || display,
+    bloque: building,
+    piso: floor,
+    laboratorio: room,
+  };
+
+  return {
+    display,
+    building: building || "",
+    floor: floor || "",
+    room: room || "",
+    data,
+  };
+};
+
 // Función para exportar historial de telemetría a CSV
 const exportTelemetryCSV = (system) => {
   // Generar datos de telemetría simulados (en una app real vendrían de la API)
@@ -67,17 +115,15 @@ const exportTelemetryCSV = (system) => {
   document.body.removeChild(link);
 };
 
-const buildLocationString = (device) => {
-  const parts = [];
-  if (device.building) parts.push(device.building);
-  if (device.floor) parts.push(`Piso ${device.floor}`);
-  if (device.room) parts.push(device.room);
-  return parts.join(" • ") || device.location || device.deviceLocation || "Ubicación no especificada";
-};
-
 const normalizeDevice = (raw) => {
   const now = new Date().toISOString();
-  const id = raw.id || raw.deviceId || `sys-${Math.random().toString(36).slice(2, 10)}`;
+  const id =
+    raw.id ||
+    raw.uuid ||
+    raw.deviceId ||
+    raw.device_id ||
+    raw._id ||
+    `sys-${Math.random().toString(36).slice(2, 10)}`;
   const firstName = raw.firstName || raw.userFirstName || "";
   const lastName = raw.lastName || raw.userLastName || "";
   const responsible = raw.responsible || [firstName, lastName].filter(Boolean).join(" ");
@@ -91,7 +137,7 @@ const normalizeDevice = (raw) => {
   const status = raw.status || raw.controller?.status || "online";
   const signal = raw.signal ?? raw.controller?.signal ?? 90;
   const lastSeen = raw.lastSeen || raw.controller?.lastSeen || now;
-  const location = buildLocationString(raw);
+  const locationInfo = extractLocationInfo(raw);
 
   const controller = {
     status,
@@ -130,10 +176,11 @@ const normalizeDevice = (raw) => {
     name,
     controller,
     modules,
-    location,
-    building: raw.building || "",
-    floor: raw.floor || "",
-    room: raw.room || "",
+    location: locationInfo.display,
+    locationData: locationInfo.data,
+    building: locationInfo.building,
+    floor: locationInfo.floor,
+    room: locationInfo.room,
     description: raw.description || "",
     maintenanceInterval: raw.maintenanceInterval ?? 30,
     nextMaintenance: raw.nextMaintenance || null,
@@ -186,45 +233,77 @@ export default function DevicesSection() {
   const [editingDevice, setEditingDevice] = useState(null);
   const [refreshing, setRefreshing] = useState(false);
 
-  const fetchDevices = async () => {
+  const fetchDevices = useCallback(async () => {
+    const currentUserId = getUserId(user);
+    if (!currentUserId) return;
+
     try {
       const response = await apiService.getDevices(token);
-      setSystems(response || []);
+      const rawDevices = Array.isArray(response)
+        ? response
+        : response?.devices || response?.data || [];
+
+      const filtered = rawDevices.filter((device) => {
+        if (!device?.userId) return true;
+        return String(device.userId) === String(currentUserId);
+      });
+
+      const normalized = filtered.map(normalizeDevice);
+      setSystems(normalized);
+      setError("");
     } catch (error) {
       console.error('Error fetching devices:', error);
+      setSystems([]);
+      setError("No se pudieron cargar los dispositivos.");
+      toast.error("No se pudieron cargar los dispositivos.");
     } finally {
       setLoadingDevices(false);
     }
-  };
+  }, [token, user]);
 
   useEffect(() => {
-    if (!user?.uuid) return;
+    if (!getUserId(user)) return;
 
     fetchDevices();
-    // setSystems(seedIfEmpty(user.uuid));
-  }, [user?.uuid]);
+  }, [user, fetchDevices]);
 
   // MÉTRICAS desde controller
   const metrics = useMemo(() => {
     const total = systems.length;
-    const online = true;
+    const online = systems.filter(sys => sys.controller?.status === "online").length;
     const offline = total - online;
     return { total, online, offline };
   }, [systems]);
 
   const refresh = () => {
-    if (!user?.uuid) return;
+    if (!getUserId(user)) return;
     setRefreshing(true);
     fetchDevices().finally(() => setRefreshing(false));
   };
 
   // Función para manejar el guardado de nuevos dispositivos
   const handleSaveDevice = async (deviceData) => {
-    if (!user?.uuid) return;
+    const currentUserId = getUserId(user);
+    if (!currentUserId) return;
+
+    const maintenanceInterval = Number(
+      deviceData.maintenanceInterval ??
+      deviceData.maintenance_interval ??
+      30
+    );
+
+    const locationPayload = deviceData.locationPayload || {
+      ubicacion: deviceData.location || "",
+      bloque: deviceData.building || "",
+      piso: deviceData.floor || "",
+      laboratorio: deviceData.room || "",
+    };
 
     const payload = {
       ...deviceData,
-      userId: user.uuid,
+      userId: currentUserId,
+      location: locationPayload,
+      maintenanceInterval,
     };
 
     try {
@@ -245,14 +324,41 @@ export default function DevicesSection() {
   };
 
   const handleUpdateDevice = async (deviceData) => {
-    if (!user?.id || !editingDevice) return;
+    const currentUserId = getUserId(user);
+    if (!currentUserId || !editingDevice) return;
 
     try {
+      const maintenanceInterval = Number(
+        deviceData.maintenanceInterval ??
+        editingDevice.maintenanceInterval ??
+        30
+      );
+
+      const locationPayload = deviceData.locationPayload || {
+        ubicacion: deviceData.location || editingDevice.locationData?.ubicacion || "",
+        bloque: deviceData.building || editingDevice.locationData?.bloque || "",
+        piso: deviceData.floor || editingDevice.locationData?.piso || "",
+        laboratorio: deviceData.room || editingDevice.locationData?.laboratorio || "",
+      };
+
       const payload = {
         ...deviceData,
-        userId: editingDevice.userId || user.id,
+        userId: editingDevice.userId || currentUserId,
+        location: locationPayload,
+        maintenanceInterval,
       };
-      const response = await apiService.updateDevice(editingDevice.id, payload);
+      const targetId =
+        editingDevice.uuid ||
+        editingDevice.id ||
+        editingDevice.deviceId ||
+        editingDevice.device_id ||
+        editingDevice._id;
+
+      if (!targetId) {
+        throw new Error("ID del dispositivo no disponible para actualización.");
+      }
+
+      const response = await apiService.updateDevice(targetId, payload);
       const updated = response?.device || response || {};
       const normalized = normalizeDevice({
         ...editingDevice,
